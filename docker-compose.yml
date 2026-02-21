@@ -1,0 +1,49 @@
+version: "3.8"
+
+services:
+  salah-guard-api:
+    build:
+      context: ./salah-guard-api
+      dockerfile: Dockerfile
+    container_name: salah-guard-api
+    restart: unless-stopped
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Data Source=/app/data/salahguard.db
+      - Jwt__Secret=${JWT_SECRET}
+      - Cors__AllowedOrigins__0=https://salahguard.app
+    volumes:
+      - salahguard-data:/app/data
+      - salahguard-logs:/app/logs
+    networks:
+      - salahguard-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  nginx:
+    image: nginx:alpine
+    container_name: salah-guard-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      salah-guard-api:
+        condition: service_healthy
+    networks:
+      - salahguard-network
+
+volumes:
+  salahguard-data:
+  salahguard-logs:
+
+networks:
+  salahguard-network:
+    driver: bridge

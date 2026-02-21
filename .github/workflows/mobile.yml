@@ -1,0 +1,101 @@
+name: Salah Guard Mobile CI
+
+on:
+  push:
+    branches: [main]
+    paths: ['salah-guard-mobile/**']
+  pull_request:
+    branches: [main]
+    paths: ['salah-guard-mobile/**']
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: salah-guard-mobile
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: salah-guard-mobile/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Run tests with coverage
+        run: npm test -- --coverage --ci
+
+  build-android:
+    needs: lint-test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: salah-guard-mobile
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: salah-guard-mobile/package-lock.json
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create .env file
+        run: echo "API_BASE_URL=${{ secrets.API_BASE_URL }}" > .env
+
+      - name: Build debug APK
+        if: github.event_name == 'pull_request'
+        run: |
+          cd android
+          ./gradlew assembleDebug
+
+      - name: Decode keystore
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/release.keystore
+          echo "SALAHGUARD_RELEASE_STORE_FILE=release.keystore" > android/keystore.properties
+          echo "SALAHGUARD_RELEASE_STORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> android/keystore.properties
+          echo "SALAHGUARD_RELEASE_KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> android/keystore.properties
+          echo "SALAHGUARD_RELEASE_KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> android/keystore.properties
+
+      - name: Build signed release APK
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          cd android
+          ./gradlew assembleRelease
+
+      - name: Upload APK artifact
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: salah-guard-release-apk
+          path: salah-guard-mobile/android/app/build/outputs/apk/release/*.apk
+          retention-days: 30

@@ -1,0 +1,78 @@
+# Dependencies
+node_modules/
+.npm/
+
+# Build outputs
+build/
+dist/
+bin/
+obj/
+*.apk
+*.aab
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# .NET
+salah-guard-api/bin/
+salah-guard-api/obj/
+salah-guard-api/*.db
+salah-guard-api/logs/
+salah-guard-api/publish/
+
+# React Native
+salah-guard-mobile/android/app/build/
+salah-guard-mobile/android/build/
+salah-guard-mobile/android/.gradle/
+salah-guard-mobile/ios/build/
+salah-guard-mobile/ios/Pods/
+salah-guard-mobile/coverage/
+
+# Keystores and signing
+android/app/debug.keystore
+android/app/release.keystore
+salah-guard-mobile/android/app/debug.keystore
+salah-guard-mobile/android/app/release.keystore
+keystore.properties
+salah-guard-mobile/android/keystore.properties
+*.keystore
+*.jks
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.staging
+salah-guard-mobile/.env
+salah-guard-mobile/.env.local
+salah-guard-mobile/.env.production
+
+# API secrets
+salah-guard-api/appsettings.Production.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Metro bundler
+salah-guard-mobile/.metro-health-check*
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# SSL certificates (for Docker nginx)
+nginx/certs/*.pem
+nginx/certs/*.key
+
+# Sentry
+.sentryclirc

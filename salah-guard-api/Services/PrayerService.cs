@@ -28,8 +28,9 @@ public class PrayerService : IPrayerService
     {
         var prayers = await _context.Prayers
             .AsNoTracking()
-            .OrderBy(p => p.ScheduledTime)
             .ToListAsync(cancellationToken);
+
+        prayers = prayers.OrderBy(p => p.ScheduledTime).ToList();
 
         return _mapper.Map<List<PrayerDto>>(prayers);
     }

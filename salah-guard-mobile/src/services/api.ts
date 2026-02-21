@@ -27,7 +27,7 @@ const MAX_RETRIES = 3;
 const RETRY_DELAY_BASE = 1000;
 
 function getBaseUrl(): string {
-  return getApiUrl() ?? 'http://10.0.2.2:5000';
+  return getApiUrl() ?? 'http://10.93.37.139:5000';
 }
 
 let apiClient: AxiosInstance | null = null;

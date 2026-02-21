@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import type { DndSession } from '../types';
 import { formatIsoToDateTime } from '../utils/timeUtils';
 import { getPrayerColor } from '../utils/prayerUtils';

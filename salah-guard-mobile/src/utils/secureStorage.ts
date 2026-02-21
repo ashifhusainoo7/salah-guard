@@ -1,11 +1,11 @@
 /**
- * Secure storage wrapper using react-native-keychain for sensitive data.
- * Uses hardware-backed keystore on Android and Keychain on iOS.
+ * Secure storage wrapper using AsyncStorage for Expo Go compatibility.
+ * In production, replace with expo-secure-store or react-native-keychain.
  */
-import * as Keychain from 'react-native-keychain';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import logger from './logger';
 
-const SERVICE_PREFIX = 'com.salahguard';
+const TOKEN_KEY = 'com.salahguard.tokens';
 
 interface TokenPair {
   accessToken: string;
@@ -14,25 +14,19 @@ interface TokenPair {
 
 export async function storeTokens(tokens: TokenPair): Promise<boolean> {
   try {
-    await Keychain.setGenericPassword(
-      'auth_tokens',
-      JSON.stringify(tokens),
-      { service: `${SERVICE_PREFIX}.tokens` },
-    );
+    await AsyncStorage.setItem(TOKEN_KEY, JSON.stringify(tokens));
     return true;
   } catch (err) {
-    logger.error('Failed to store tokens securely:', err);
+    logger.error('Failed to store tokens:', err);
     return false;
   }
 }
 
 export async function getTokens(): Promise<TokenPair | null> {
   try {
-    const credentials = await Keychain.getGenericPassword({
-      service: `${SERVICE_PREFIX}.tokens`,
-    });
-    if (credentials && credentials.password) {
-      return JSON.parse(credentials.password) as TokenPair;
+    const data = await AsyncStorage.getItem(TOKEN_KEY);
+    if (data) {
+      return JSON.parse(data) as TokenPair;
     }
     return null;
   } catch (err) {
@@ -43,9 +37,7 @@ export async function getTokens(): Promise<TokenPair | null> {
 
 export async function clearTokens(): Promise<boolean> {
   try {
-    await Keychain.resetGenericPassword({
-      service: `${SERVICE_PREFIX}.tokens`,
-    });
+    await AsyncStorage.removeItem(TOKEN_KEY);
     return true;
   } catch (err) {
     logger.error('Failed to clear tokens:', err);
@@ -54,10 +46,5 @@ export async function clearTokens(): Promise<boolean> {
 }
 
 export async function isBiometricAvailable(): Promise<boolean> {
-  try {
-    const supportedType = await Keychain.getSupportedBiometryType();
-    return supportedType !== null;
-  } catch {
-    return false;
-  }
+  return false;
 }

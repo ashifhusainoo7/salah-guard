@@ -5,7 +5,7 @@
  */
 import React, { useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, Linking, Platform } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 
 const IosFocusHelper: React.FC = () => {
   const openFocusSettings = useCallback(() => {

@@ -7,16 +7,14 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
-import DateTimePicker, {
-  DateTimePickerEvent,
-} from '@react-native-community/datetimepicker';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+// DateTimePicker removed for web compatibility
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import type { Prayer } from '../types';
 import useSalahStore from '../store/useSalahStore';
 import DurationSlider from '../components/DurationSlider';
 import OfflineBanner from '../components/OfflineBanner';
 import LoadingView from '../components/LoadingView';
-import { parseTime, formatTime } from '../utils/timeUtils';
+import { parseTime } from '../utils/timeUtils';
 import { t } from '../i18n/strings';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
@@ -38,30 +36,9 @@ const ScheduleScreen: React.FC = () => {
   const updatePrayer = useSalahStore((s) => s.updatePrayer);
 
   const [editingPrayerId, setEditingPrayerId] = useState<number | null>(null);
-  const [showTimePicker, setShowTimePicker] = useState(false);
-  const [selectedPrayer, setSelectedPrayer] = useState<Prayer | null>(null);
-
   const handleTimePress = useCallback((prayer: Prayer) => {
-    setSelectedPrayer(prayer);
-    setShowTimePicker(true);
+    Alert.alert('Change Time', `Current time: ${prayer.scheduledTime}\nUse the native app to change prayer times.`);
   }, []);
-
-  const handleTimeChange = useCallback(
-    (_event: DateTimePickerEvent, selectedDate?: Date) => {
-      setShowTimePicker(false);
-      if (selectedDate && selectedPrayer) {
-        const newTime = formatTime(
-          selectedDate.getHours(),
-          selectedDate.getMinutes(),
-        );
-        updatePrayer(selectedPrayer.id, { scheduledTime: newTime }).catch(
-          () => {},
-        );
-      }
-      setSelectedPrayer(null);
-    },
-    [selectedPrayer, updatePrayer],
-  );
 
   const handleDurationChange = useCallback(
     (prayerId: number, value: number) => {
@@ -190,22 +167,6 @@ const ScheduleScreen: React.FC = () => {
         })}
       </ScrollView>
 
-      {showTimePicker && selectedPrayer && (
-        <DateTimePicker
-          value={(() => {
-            const { hours: h, minutes: m } = parseTime(
-              selectedPrayer.scheduledTime,
-            );
-            const d = new Date();
-            d.setHours(h, m, 0, 0);
-            return d;
-          })()}
-          mode="time"
-          is24Hour
-          display="spinner"
-          onChange={handleTimeChange}
-        />
-      )}
     </View>
   );
 };

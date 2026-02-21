@@ -8,7 +8,6 @@ import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from 'axios';
-import Config from 'react-native-config';
 import type {
   ApiResponse,
   AuthTokenResponse,
@@ -28,7 +27,7 @@ const MAX_RETRIES = 3;
 const RETRY_DELAY_BASE = 1000;
 
 function getBaseUrl(): string {
-  return getApiUrl() ?? Config.API_BASE_URL ?? 'http://10.0.2.2:5000';
+  return getApiUrl() ?? 'http://10.0.2.2:5000';
 }
 
 let apiClient: AxiosInstance | null = null;

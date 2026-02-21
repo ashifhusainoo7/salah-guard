@@ -1,10 +1,5 @@
 import React, { useCallback } from 'react';
 import { View, Text, Switch, StyleSheet } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-} from 'react-native-reanimated';
 import { t } from '../i18n/strings';
 import useSalahStore from '../store/useSalahStore';
 
@@ -15,21 +10,12 @@ const MasterToggle: React.FC = React.memo(() => {
   const isGloballyActive = useSalahStore((s) => s.settings.isGloballyActive);
   const toggleGlobalActive = useSalahStore((s) => s.toggleGlobalActive);
 
-  const scale = useSharedValue(1);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
   const handleToggle = useCallback(() => {
-    scale.value = withSpring(0.95, {}, () => {
-      scale.value = withSpring(1);
-    });
     toggleGlobalActive().catch(() => {});
-  }, [toggleGlobalActive, scale]);
+  }, [toggleGlobalActive]);
 
   return (
-    <Animated.View style={[styles.container, animatedStyle]}>
+    <View style={styles.container}>
       <View
         style={[
           styles.card,
@@ -47,7 +33,7 @@ const MasterToggle: React.FC = React.memo(() => {
           testID="master-toggle"
         />
       </View>
-    </Animated.View>
+    </View>
   );
 });
 

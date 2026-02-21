@@ -1,18 +1,9 @@
 import React, { useCallback, useState } from 'react';
 import { View, Text, Switch, StyleSheet, TouchableOpacity } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  FadeIn,
-} from 'react-native-reanimated';
-import DateTimePicker, {
-  DateTimePickerEvent,
-} from '@react-native-community/datetimepicker';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import type { Prayer } from '../types';
 import { getPrayerColor } from '../utils/prayerUtils';
-import { parseTime, formatTime } from '../utils/timeUtils';
+import { parseTime } from '../utils/timeUtils';
 import { t } from '../i18n/strings';
 import useSalahStore from '../store/useSalahStore';
 
@@ -23,52 +14,18 @@ interface PrayerCardProps {
 
 const PrayerCard: React.FC<PrayerCardProps> = React.memo(({ prayer, isNext }) => {
   const updatePrayer = useSalahStore((s) => s.updatePrayer);
-  const [showTimePicker, setShowTimePicker] = useState(false);
-
-  const scale = useSharedValue(1);
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
 
   const handleToggle = useCallback(
     (value: boolean) => {
-      scale.value = withSpring(0.97, {}, () => {
-        scale.value = withSpring(1);
-      });
       updatePrayer(prayer.id, { isEnabled: value }).catch(() => {});
-    },
-    [prayer.id, updatePrayer, scale],
-  );
-
-  const handleTimeChange = useCallback(
-    (_event: DateTimePickerEvent, selectedDate?: Date) => {
-      setShowTimePicker(false);
-      if (selectedDate) {
-        const newTime = formatTime(
-          selectedDate.getHours(),
-          selectedDate.getMinutes(),
-        );
-        updatePrayer(prayer.id, { scheduledTime: newTime }).catch(() => {});
-      }
     },
     [prayer.id, updatePrayer],
   );
 
-  const openTimePicker = useCallback(() => {
-    setShowTimePicker(true);
-  }, []);
-
-  const { hours, minutes } = parseTime(prayer.scheduledTime);
-  const pickerDate = new Date();
-  pickerDate.setHours(hours, minutes, 0, 0);
-
   const prayerColor = getPrayerColor(prayer.name);
 
   return (
-    <Animated.View
-      entering={FadeIn.duration(300)}
-      style={[styles.container, animatedStyle, isNext && styles.highlighted]}
-    >
+    <View style={[styles.container, isNext && styles.highlighted]}>
       <View style={[styles.colorStrip, { backgroundColor: prayerColor }]} />
       <View style={styles.content}>
         <View style={styles.header}>
@@ -86,17 +43,10 @@ const PrayerCard: React.FC<PrayerCardProps> = React.memo(({ prayer, isNext }) =>
           />
         </View>
 
-        <TouchableOpacity
-          style={styles.timeRow}
-          onPress={openTimePicker}
-          activeOpacity={0.7}
-          accessibilityLabel={`Change ${prayer.name} time`}
-          accessibilityRole="button"
-        >
+        <View style={styles.timeRow}>
           <Icon name="clock-outline" size={16} color="#666" />
           <Text style={styles.time}>{prayer.scheduledTime}</Text>
-          <Icon name="pencil" size={14} color="#999" />
-        </TouchableOpacity>
+        </View>
 
         <View style={styles.durationRow}>
           <Icon name="timer-sand" size={14} color="#666" />
@@ -111,17 +61,7 @@ const PrayerCard: React.FC<PrayerCardProps> = React.memo(({ prayer, isNext }) =>
           </View>
         )}
       </View>
-
-      {showTimePicker && (
-        <DateTimePicker
-          value={pickerDate}
-          mode="time"
-          is24Hour
-          display="spinner"
-          onChange={handleTimeChange}
-        />
-      )}
-    </Animated.View>
+    </View>
   );
 });
 

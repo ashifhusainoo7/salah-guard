@@ -1,6 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import * as Sentry from '@sentry/react-native';
 import { t } from '../i18n/strings';
 
 interface Props {
@@ -23,9 +22,7 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    Sentry.captureException(error, {
-      extra: { componentStack: errorInfo.componentStack },
-    });
+    console.error('ErrorBoundary caught:', error, errorInfo.componentStack);
   }
 
   handleRetry = (): void => {

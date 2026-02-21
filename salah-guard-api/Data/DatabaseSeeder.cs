@@ -13,7 +13,7 @@ public static class DatabaseSeeder
     /// </summary>
     public static async Task SeedAsync(SalahGuardDbContext context, CancellationToken cancellationToken = default)
     {
-        await context.Database.MigrateAsync(cancellationToken);
+        await context.Database.EnsureCreatedAsync(cancellationToken);
 
         if (!await context.Prayers.AnyAsync(cancellationToken))
         {

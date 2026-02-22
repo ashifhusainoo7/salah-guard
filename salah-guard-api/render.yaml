@@ -10,6 +10,7 @@ services:
     plan: free
     dockerfilePath: ./Dockerfile
     healthCheckPath: /health
+    port: 8080
     envVars:
       - key: Jwt__Secret
         generateValue: true  # Render auto-generates a secure random value

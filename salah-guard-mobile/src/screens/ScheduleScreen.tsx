@@ -5,9 +5,11 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
+  Platform,
   Alert,
   RefreshControl,
 } from 'react-native';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import type { Prayer } from '../types';
 import useSalahStore from '../store/useSalahStore';
@@ -15,7 +17,7 @@ import DurationSlider from '../components/DurationSlider';
 import OfflineBanner from '../components/OfflineBanner';
 import LoadingView from '../components/LoadingView';
 import EmptyState from '../components/EmptyState';
-import { parseTime } from '../utils/timeUtils';
+import { parseTime, formatTime } from '../utils/timeUtils';
 import { getPrayerColor } from '../utils/prayerUtils';
 import { getPrayerGradient } from '../theme';
 import { t } from '../i18n/strings';
@@ -42,6 +44,8 @@ const ScheduleScreen: React.FC = () => {
 
   const [editingPrayerId, setEditingPrayerId] = useState<number | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [timePickerPrayerId, setTimePickerPrayerId] = useState<number | null>(null);
 
   useEffect(() => {
     if (prayers.length === 0) {
@@ -56,8 +60,23 @@ const ScheduleScreen: React.FC = () => {
       .finally(() => setRefreshing(false));
   }, [loadPrayers]);
   const handleTimePress = useCallback((prayer: Prayer) => {
-    Alert.alert('Change Time', `Current time: ${prayer.scheduledTime}\nUse the native app to change prayer times.`);
+    setTimePickerPrayerId(prayer.id);
+    setShowTimePicker(true);
   }, []);
+
+  const handleTimeChange = useCallback(
+    (event: DateTimePickerEvent, selectedDate?: Date) => {
+      setShowTimePicker(Platform.OS === 'ios');
+      if (event.type === 'dismissed' || !selectedDate || timePickerPrayerId == null) {
+        setShowTimePicker(false);
+        return;
+      }
+      const newTime = formatTime(selectedDate.getHours(), selectedDate.getMinutes());
+      updatePrayer(timePickerPrayerId, { scheduledTime: newTime }).catch(() => {});
+      setShowTimePicker(false);
+    },
+    [timePickerPrayerId, updatePrayer],
+  );
 
   const handleDurationChange = useCallback(
     (prayerId: number, value: number) => {
@@ -194,6 +213,21 @@ const ScheduleScreen: React.FC = () => {
           );
         })}
       </ScrollView>
+      {showTimePicker && timePickerPrayerId != null && (() => {
+        const prayer = prayers.find((p) => p.id === timePickerPrayerId);
+        const { hours, minutes } = parseTime(prayer?.scheduledTime ?? '00:00');
+        const pickerDate = new Date();
+        pickerDate.setHours(hours, minutes, 0, 0);
+        return (
+          <DateTimePicker
+            value={pickerDate}
+            mode="time"
+            is24Hour
+            display="spinner"
+            onChange={handleTimeChange}
+          />
+        );
+      })()}
     </View>
   );
 };

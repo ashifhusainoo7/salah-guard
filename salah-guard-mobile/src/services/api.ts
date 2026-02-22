@@ -27,7 +27,7 @@ const MAX_RETRIES = 3;
 const RETRY_DELAY_BASE = 1000;
 
 function getBaseUrl(): string {
-  return getApiUrl() ?? 'https://salah-guard-api.onrender.com';
+  return getApiUrl() ?? 'https://salah-guard-api-544133810031.asia-south1.run.app';
 }
 
 let apiClient: AxiosInstance | null = null;

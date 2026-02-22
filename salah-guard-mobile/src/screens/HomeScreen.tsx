@@ -110,13 +110,13 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   sectionLabel: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
     color: colors.text.muted,
     letterSpacing: 1,
     textTransform: 'uppercase',
     marginHorizontal: spacing.lg,
-    marginTop: spacing.lg,
+    marginTop: spacing.xl,
     marginBottom: spacing.sm,
   },
 });

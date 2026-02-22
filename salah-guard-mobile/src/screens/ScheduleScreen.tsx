@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import type { Prayer } from '../types';
@@ -13,6 +14,7 @@ import useSalahStore from '../store/useSalahStore';
 import DurationSlider from '../components/DurationSlider';
 import OfflineBanner from '../components/OfflineBanner';
 import LoadingView from '../components/LoadingView';
+import EmptyState from '../components/EmptyState';
 import { parseTime } from '../utils/timeUtils';
 import { getPrayerColor } from '../utils/prayerUtils';
 import { getPrayerGradient } from '../theme';
@@ -36,8 +38,23 @@ const ScheduleScreen: React.FC = () => {
   const prayers = useSalahStore((s) => s.prayers);
   const isLoading = useSalahStore((s) => s.isLoading);
   const updatePrayer = useSalahStore((s) => s.updatePrayer);
+  const loadPrayers = useSalahStore((s) => s.loadPrayers);
 
   const [editingPrayerId, setEditingPrayerId] = useState<number | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    if (prayers.length === 0) {
+      loadPrayers().catch(() => {});
+    }
+  }, [prayers.length, loadPrayers]);
+
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    loadPrayers()
+      .catch(() => {})
+      .finally(() => setRefreshing(false));
+  }, [loadPrayers]);
   const handleTimePress = useCallback((prayer: Prayer) => {
     Alert.alert('Change Time', `Current time: ${prayer.scheduledTime}\nUse the native app to change prayer times.`);
   }, []);
@@ -74,7 +91,19 @@ const ScheduleScreen: React.FC = () => {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={[colors.accent.emerald]}
+            tintColor={colors.accent.emerald}
+            progressBackgroundColor={colors.bg.secondary}
+          />
+        }
       >
+        {prayers.length === 0 && !isLoading && (
+          <EmptyState icon="calendar-blank" message="No prayer schedules found. Pull to refresh." />
+        )}
         {prayers.map((prayer) => {
           const isEditing = editingPrayerId === prayer.id;
           const gradient = getPrayerGradient(prayer.name);
@@ -246,17 +275,16 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   dayButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.bg.cardBorder,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 0,
+    backgroundColor: colors.bg.cardHover,
     alignItems: 'center',
     justifyContent: 'center',
   },
   dayButtonActive: {
     backgroundColor: colors.accent.emerald,
-    borderColor: colors.accent.emerald,
   },
   dayText: {
     fontSize: 11,

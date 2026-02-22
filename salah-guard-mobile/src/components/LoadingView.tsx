@@ -21,11 +21,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: spacing.xxl,
+    padding: spacing.xxxl,
     backgroundColor: colors.bg.primary,
   },
   text: {
-    marginTop: spacing.md,
+    marginTop: spacing.lg,
     fontSize: 14,
     color: colors.text.secondary,
   },

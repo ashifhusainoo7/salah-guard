@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
   card: {
     ...glassCard,
     alignItems: 'center',
-    paddingVertical: spacing.xl,
+    paddingVertical: spacing.xxl,
     paddingHorizontal: spacing.xl,
   },
   arabicName: {
@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   countdown: {
-    fontSize: 40,
+    fontSize: 52,
     fontWeight: '800',
     letterSpacing: -1,
     marginBottom: 4,

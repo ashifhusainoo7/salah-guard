@@ -127,6 +127,9 @@ const useSalahStore = create<SalahState>((set, get) => ({
 
   updateSettings: async (data: UserSettings) => {
     set({ error: null });
+    // Optimistic: update UI instantly
+    setCachedSettings(data);
+    set({ settings: data });
     try {
       const settings = await api.updateSettings(data);
       setCachedSettings(settings);
@@ -134,9 +137,7 @@ const useSalahStore = create<SalahState>((set, get) => ({
       scheduleAllAlarms(get().prayers, settings.isGloballyActive);
     } catch (err) {
       logger.error('Failed to update settings:', err);
-      // Optimistic update
-      setCachedSettings(data);
-      set({ settings: data });
+      // Already set optimistically; schedule alarms with local data
       scheduleAllAlarms(get().prayers, data.isGloballyActive);
     }
   },

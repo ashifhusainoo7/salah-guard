@@ -60,20 +60,19 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.lg,
   },
   cardActive: {
-    borderColor: colors.accent.emerald,
-    borderWidth: 1,
+    backgroundColor: 'rgba(16,185,129,0.08)',
   },
   textWrap: {
     flex: 1,
     marginRight: spacing.md,
   },
   label: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
     color: colors.text.primary,
   },
   sublabel: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '500',
     color: colors.text.secondary,
     marginTop: 2,

@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg.primary,
   },
   listContent: {
-    paddingVertical: 8,
+    paddingVertical: 12,
     flexGrow: 1,
   },
 });

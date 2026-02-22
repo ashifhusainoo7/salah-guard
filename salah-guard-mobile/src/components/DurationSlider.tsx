@@ -76,16 +76,14 @@ const styles = StyleSheet.create({
   },
   pill: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 14,
     borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.bg.cardBorder,
-    backgroundColor: 'transparent',
+    borderWidth: 0,
+    backgroundColor: colors.bg.cardHover,
     alignItems: 'center',
   },
   pillActive: {
     backgroundColor: colors.accent.emerald,
-    borderColor: colors.accent.emerald,
   },
   pillText: {
     fontSize: 13,

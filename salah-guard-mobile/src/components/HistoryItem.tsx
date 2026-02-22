@@ -87,7 +87,7 @@ HistoryItem.displayName = 'HistoryItem';
 const styles = StyleSheet.create({
   container: {
     marginHorizontal: spacing.lg,
-    marginVertical: 4,
+    marginVertical: 6,
   },
   header: {
     flexDirection: 'row',
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   prayerName: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700',
     color: colors.text.primary,
   },
@@ -118,15 +118,15 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   details: {
-    gap: 3,
+    gap: 5,
   },
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
   },
   detailText: {
-    fontSize: 12,
+    fontSize: 13,
     color: colors.text.secondary,
   },
 });

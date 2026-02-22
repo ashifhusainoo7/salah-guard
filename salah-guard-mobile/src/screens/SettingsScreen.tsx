@@ -5,12 +5,9 @@ import {
   Switch,
   ScrollView,
   TouchableOpacity,
-  TextInput,
   StyleSheet,
-  Alert,
   Linking,
   AppState,
-  NativeModules,
 } from 'react-native';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import useSalahStore from '../store/useSalahStore';
@@ -19,19 +16,15 @@ import {
   requestBatteryOptimizationExclusion,
   hasDndPermission,
 } from '../services/dndBridge';
-import { resetApiClient } from '../services/api';
-import { getApiUrl, setApiUrl } from '../utils/storage';
 import OfflineBanner from '../components/OfflineBanner';
 import { t } from '../i18n/strings';
 import { colors, spacing, radius, glassCard } from '../theme';
 
 const APP_VERSION = '1.0.0';
-const isStandalone = !!NativeModules.DndModule;
 
 const SettingsScreen: React.FC = () => {
   const settings = useSalahStore((s) => s.settings);
   const updateSettings = useSalahStore((s) => s.updateSettings);
-  const [apiUrl, setApiUrlState] = useState(getApiUrl() ?? '');
   const [hasDnd, setHasDnd] = useState<boolean | null>(null);
   const appState = useRef(AppState.currentState);
 
@@ -49,36 +42,12 @@ const SettingsScreen: React.FC = () => {
   );
 
   const handleRequestDndPermission = useCallback(async () => {
-    if (isStandalone) {
-      await requestDndPermission();
-    } else {
-      Alert.alert(
-        'DND Permission',
-        'DND access requires a standalone build. In Expo Go, Salah Guard cannot control Do Not Disturb.\n\nBuild a production APK to enable this feature.',
-        [{ text: 'OK' }],
-      );
-    }
+    await requestDndPermission();
   }, []);
 
   const handleBatteryOptimization = useCallback(async () => {
-    if (isStandalone) {
-      await requestBatteryOptimizationExclusion();
-    } else {
-      Alert.alert(
-        'Battery Optimization',
-        'Battery optimization exclusion requires a standalone build. In Expo Go, this setting is not available.\n\nBuild a production APK to enable this feature.',
-        [{ text: 'OK' }],
-      );
-    }
+    await requestBatteryOptimizationExclusion();
   }, []);
-
-  const handleSaveApiUrl = useCallback(() => {
-    if (apiUrl.trim()) {
-      setApiUrl(apiUrl.trim());
-      resetApiClient();
-      Alert.alert('Success', 'API URL updated. Restart the app for full effect.');
-    }
-  }, [apiUrl]);
 
   const handlePrivacyPolicy = useCallback(() => {
     Linking.openURL('https://salahguard.app/privacy').catch(() => {});
@@ -147,7 +116,7 @@ const SettingsScreen: React.FC = () => {
                     { color: hasDnd ? colors.status.success : colors.text.muted },
                   ]}
                 >
-                  {hasDnd ? 'Granted' : isStandalone ? 'Not granted' : 'Requires standalone build'}
+                  {hasDnd ? 'Granted' : 'Tap to configure'}
                 </Text>
               </View>
             </View>
@@ -168,36 +137,12 @@ const SettingsScreen: React.FC = () => {
               </Text>
               <View style={[styles.statusPill, { backgroundColor: colors.bg.cardHover }]}>
                 <Text style={[styles.statusLabel, { color: colors.text.muted }]}>
-                  {isStandalone ? 'Tap to configure' : 'Requires standalone build'}
+                  Tap to configure
                 </Text>
               </View>
             </View>
             <Icon name="chevron-right" size={20} color={colors.text.muted} />
           </TouchableOpacity>
-        </View>
-
-        {/* API Configuration */}
-        <Text style={styles.sectionTitle}>{t('apiServerUrl')}</Text>
-        <View style={styles.section}>
-          <View style={styles.inputRow}>
-            <TextInput
-              style={styles.input}
-              value={apiUrl}
-              onChangeText={setApiUrlState}
-              placeholder="http://10.0.2.2:5000"
-              placeholderTextColor={colors.text.muted}
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="url"
-            />
-            <TouchableOpacity
-              style={styles.saveUrlButton}
-              onPress={handleSaveApiUrl}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.saveUrlText}>{t('save')}</Text>
-            </TouchableOpacity>
-          </View>
         </View>
 
         {/* App Info */}
@@ -261,7 +206,7 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   sectionTitle: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
     color: colors.text.muted,
     textTransform: 'uppercase',
@@ -283,11 +228,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing.lg,
-    gap: 12,
+    gap: 14,
   },
   settingsLabel: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '500',
     color: colors.text.primary,
   },
@@ -295,14 +240,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing.lg,
-    gap: 12,
+    gap: 14,
   },
   actionContent: {
     flex: 1,
   },
   actionLabel: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '500',
     color: colors.text.primary,
   },
@@ -317,34 +262,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
   },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.md,
-    gap: spacing.sm,
-  },
-  input: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: colors.bg.cardBorder,
-    backgroundColor: colors.bg.input,
-    borderRadius: radius.sm,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: colors.text.primary,
-  },
-  saveUrlButton: {
-    backgroundColor: colors.accent.emerald,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: radius.sm,
-  },
-  saveUrlText: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '600',
-  },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -353,7 +270,7 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '500',
     color: colors.text.primary,
   },

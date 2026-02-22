@@ -6,7 +6,7 @@ import { getPrayerColor } from '../utils/prayerUtils';
 import { t } from '../i18n/strings';
 import useSalahStore from '../store/useSalahStore';
 import { getPrayerGradient } from '../theme';
-import { colors, spacing, glassCard } from '../theme';
+import { colors, spacing, glassCard, shadows } from '../theme';
 import GradientCard from './GradientCard';
 
 interface PrayerCardProps {
@@ -83,8 +83,7 @@ const styles = StyleSheet.create({
     marginVertical: 5,
   },
   highlighted: {
-    borderColor: colors.accent.gold,
-    borderWidth: 1,
+    ...shadows.glow(colors.accent.gold),
   },
   header: {
     flexDirection: 'row',
@@ -118,7 +117,7 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   time: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
     color: colors.text.primary,
   },

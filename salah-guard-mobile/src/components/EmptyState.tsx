@@ -20,13 +20,14 @@ EmptyState.displayName = 'EmptyState';
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    minHeight: 300,
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing.xxxl,
   },
   text: {
     marginTop: spacing.lg,
-    fontSize: 15,
+    fontSize: 16,
     color: colors.text.secondary,
     textAlign: 'center',
   },

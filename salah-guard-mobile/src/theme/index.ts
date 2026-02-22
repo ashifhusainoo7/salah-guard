@@ -1,18 +1,18 @@
 /**
  * Salah Guard — Centralized Design System
- * Dark-first theme with prayer-specific gradients and glassmorphism.
+ * Dark-first theme with prayer-specific gradients and CRED-inspired depth.
  */
 
 // ─── Colors ──────────────────────────────────────────────
 export const colors = {
   bg: {
-    primary: '#0F1624',
-    secondary: '#151C2E',
-    card: 'rgba(255,255,255,0.06)',
-    cardHover: 'rgba(255,255,255,0.10)',
-    cardBorder: 'rgba(255,255,255,0.10)',
+    primary: '#0B0F1A',
+    secondary: '#111827',
+    card: '#1A2236',
+    cardHover: '#212B42',
+    cardBorder: 'rgba(255,255,255,0.04)',
     input: 'rgba(255,255,255,0.08)',
-    tabBar: 'rgba(15,22,36,0.92)',
+    tabBar: '#0E1320',
   },
   accent: {
     emerald: '#10B981',
@@ -26,7 +26,7 @@ export const colors = {
     primary: '#F1F5F9',
     secondary: 'rgba(241,245,249,0.60)',
     muted: 'rgba(241,245,249,0.35)',
-    inverse: '#0F1624',
+    inverse: '#0B0F1A',
   },
   status: {
     success: '#10B981',
@@ -66,30 +66,30 @@ export const spacing = {
   xs: 4,
   sm: 8,
   md: 12,
-  lg: 16,
-  xl: 20,
-  xxl: 24,
-  xxxl: 32,
+  lg: 20,
+  xl: 28,
+  xxl: 36,
+  xxxl: 40,
 } as const;
 
 // ─── Border Radius ───────────────────────────────────────
 export const radius = {
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 20,
+  sm: 12,
+  md: 16,
+  lg: 20,
+  xl: 24,
   pill: 999,
 } as const;
 
 // ─── Typography ──────────────────────────────────────────
 export const typography = {
-  hero: { fontSize: 36, fontWeight: '800' as const, letterSpacing: -1 },
-  h1: { fontSize: 24, fontWeight: '700' as const, letterSpacing: -0.5 },
-  h2: { fontSize: 20, fontWeight: '700' as const },
-  h3: { fontSize: 16, fontWeight: '600' as const },
-  body: { fontSize: 14, fontWeight: '500' as const },
+  hero: { fontSize: 42, fontWeight: '800' as const, letterSpacing: -1 },
+  h1: { fontSize: 28, fontWeight: '700' as const, letterSpacing: -0.5 },
+  h2: { fontSize: 22, fontWeight: '700' as const },
+  h3: { fontSize: 17, fontWeight: '600' as const },
+  body: { fontSize: 15, fontWeight: '500' as const },
   caption: { fontSize: 12, fontWeight: '500' as const },
-  label: { fontSize: 11, fontWeight: '700' as const, letterSpacing: 1, textTransform: 'uppercase' as const },
+  label: { fontSize: 12, fontWeight: '700' as const, letterSpacing: 1, textTransform: 'uppercase' as const },
   arabic: { fontSize: 22, fontWeight: '600' as const },
   arabicLarge: { fontSize: 28, fontWeight: '700' as const },
 } as const;
@@ -97,25 +97,30 @@ export const typography = {
 // ─── Glass Card Style ────────────────────────────────────
 export const glassCard = {
   backgroundColor: colors.bg.card,
-  borderWidth: 1,
+  borderWidth: 0,
   borderColor: colors.bg.cardBorder,
   borderRadius: radius.lg,
+  shadowColor: '#000000',
+  shadowOffset: { width: 0, height: 8 },
+  shadowOpacity: 0.25,
+  shadowRadius: 16,
+  elevation: 6,
 } as const;
 
 // ─── Shadows ─────────────────────────────────────────────
 export const shadows = {
   card: {
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
     elevation: 6,
   },
   glow: (color: string) => ({
     shadowColor: color,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
     elevation: 8,
   }),
 } as const;

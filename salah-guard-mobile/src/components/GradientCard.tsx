@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
-import { colors, radius } from '../theme';
+import { colors, radius, shadows } from '../theme';
 
 interface GradientCardProps {
   gradientColors?: [string, string];
@@ -41,18 +41,18 @@ const GradientCard: React.FC<GradientCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.bg.card,
-    borderWidth: 1,
-    borderColor: colors.bg.cardBorder,
+    borderWidth: 0,
     borderRadius: radius.lg,
     flexDirection: 'row',
     overflow: 'hidden',
+    ...shadows.card,
   },
   accentStrip: {
     width: 4,
   },
   content: {
     flex: 1,
-    padding: 16,
+    padding: 20,
   },
   contentWithAccent: {
     paddingLeft: 12,

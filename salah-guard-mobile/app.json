@@ -9,7 +9,7 @@
     "userInterfaceStyle": "dark",
     "icon": "./assets/icon.png",
     "splash": {
-      "backgroundColor": "#0F1624"
+      "backgroundColor": "#0B0F1A"
     },
     "plugins": ["./plugins/withDndModule"],
     "assetBundlePatterns": [
@@ -21,7 +21,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0F1624"
+        "backgroundColor": "#0B0F1A"
       },
       "package": "com.salahguard",
       "permissions": [

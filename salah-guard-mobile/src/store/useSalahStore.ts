@@ -53,6 +53,16 @@ const defaultSettings: UserSettings = {
   darkMode: false,
 };
 
+const ALL_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+const defaultPrayers: Prayer[] = [
+  { id: 1, name: 'Fajr',    arabicName: 'الفجر',   scheduledTime: '05:30', durationMinutes: 15, isEnabled: true, activeDays: ALL_DAYS },
+  { id: 2, name: 'Dhuhr',   arabicName: 'الظهر',   scheduledTime: '12:30', durationMinutes: 15, isEnabled: true, activeDays: ALL_DAYS },
+  { id: 3, name: 'Asr',     arabicName: 'العصر',   scheduledTime: '15:45', durationMinutes: 15, isEnabled: true, activeDays: ALL_DAYS },
+  { id: 4, name: 'Maghrib', arabicName: 'المغرب',  scheduledTime: '18:15', durationMinutes: 15, isEnabled: true, activeDays: ALL_DAYS },
+  { id: 5, name: 'Isha',    arabicName: 'العشاء',   scheduledTime: '20:00', durationMinutes: 15, isEnabled: true, activeDays: ALL_DAYS },
+];
+
 const useSalahStore = create<SalahState>((set, get) => ({
   prayers: [],
   settings: defaultSettings,
@@ -74,21 +84,21 @@ const useSalahStore = create<SalahState>((set, get) => ({
     } catch (err) {
       logger.error('Failed to load prayers from API, using cache:', err);
       const cached = getCachedPrayers();
-      if (cached) {
-        set({ prayers: cached, isLoading: false, isOffline: true, error: null });
-        scheduleAllAlarms(cached, get().settings.isGloballyActive);
-      } else {
-        set({
-          isLoading: false,
-          isOffline: true,
-          error: 'Unable to load prayer schedules.',
-        });
-      }
+      const fallback = cached ?? defaultPrayers;
+      setCachedPrayers(fallback);
+      set({ prayers: fallback, isLoading: false, isOffline: true, error: null });
+      scheduleAllAlarms(fallback, get().settings.isGloballyActive);
     }
   },
 
   updatePrayer: async (id: number, data: PrayerUpdatePayload) => {
     set({ error: null });
+    // Optimistic: update UI instantly
+    const optimistic = get().prayers.map((p) =>
+      p.id === id ? { ...p, ...data } : p,
+    );
+    setCachedPrayers(optimistic as Prayer[]);
+    set({ prayers: optimistic as Prayer[] });
     try {
       const updated = await api.updatePrayer(id, data);
       const prayers = get().prayers.map((p) => (p.id === id ? updated : p));
@@ -97,17 +107,8 @@ const useSalahStore = create<SalahState>((set, get) => ({
       scheduleAllAlarms(prayers, get().settings.isGloballyActive);
     } catch (err) {
       logger.error('Failed to update prayer:', err);
-      // Optimistic update for offline mode
-      if (get().isOffline) {
-        const prayers = get().prayers.map((p) =>
-          p.id === id ? { ...p, ...data } : p,
-        );
-        setCachedPrayers(prayers as Prayer[]);
-        set({ prayers: prayers as Prayer[] });
-        scheduleAllAlarms(prayers as Prayer[], get().settings.isGloballyActive);
-      } else {
-        set({ error: 'Failed to update prayer schedule.' });
-      }
+      // Already set optimistically; schedule alarms with local data
+      scheduleAllAlarms(get().prayers, get().settings.isGloballyActive);
     }
   },
 

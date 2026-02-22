@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AppNavigator from './src/navigation/AppNavigator';
 import ErrorBoundary from './src/components/ErrorBoundary';
@@ -27,6 +28,7 @@ const App: React.FC = () => {
 
   return (
     <SafeAreaProvider>
+      <StatusBar barStyle="light-content" backgroundColor="#0F1624" />
       <ErrorBoundary>
         <AppNavigator />
       </ErrorBoundary>

@@ -14,6 +14,7 @@ import OfflineBanner from '../components/OfflineBanner';
 import LoadingView from '../components/LoadingView';
 import EmptyState from '../components/EmptyState';
 import { t } from '../i18n/strings';
+import { colors } from '../theme';
 
 const HistoryScreen: React.FC = () => {
   const history = useSalahStore((s) => s.history);
@@ -52,8 +53,8 @@ const HistoryScreen: React.FC = () => {
 
   const getItemLayout = useCallback(
     (_data: ArrayLike<DndSession> | null | undefined, index: number) => ({
-      length: 100,
-      offset: 100 * index,
+      length: 110,
+      offset: 110 * index,
       index,
     }),
     [],
@@ -82,8 +83,9 @@ const HistoryScreen: React.FC = () => {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={handleRefresh}
-            colors={['#1B5E20']}
-            tintColor="#1B5E20"
+            colors={[colors.accent.emerald]}
+            tintColor={colors.accent.emerald}
+            progressBackgroundColor={colors.bg.secondary}
           />
         }
         contentContainerStyle={styles.listContent}
@@ -96,7 +98,7 @@ const HistoryScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.bg.primary,
   },
   listContent: {
     paddingVertical: 8,

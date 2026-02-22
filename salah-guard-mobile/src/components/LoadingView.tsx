@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { t } from '../i18n/strings';
+import { colors, spacing } from '../theme';
 
 interface LoadingViewProps {
   message?: string;
@@ -8,7 +9,7 @@ interface LoadingViewProps {
 
 const LoadingView: React.FC<LoadingViewProps> = React.memo(({ message }) => (
   <View style={styles.container}>
-    <ActivityIndicator size="large" color="#1B5E20" />
+    <ActivityIndicator size="large" color={colors.accent.emerald} />
     <Text style={styles.text}>{message ?? t('loading')}</Text>
   </View>
 ));
@@ -20,12 +21,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
+    padding: spacing.xxl,
+    backgroundColor: colors.bg.primary,
   },
   text: {
-    marginTop: 12,
+    marginTop: spacing.md,
     fontSize: 14,
-    color: '#757575',
+    color: colors.text.secondary,
   },
 });
 

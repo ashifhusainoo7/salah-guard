@@ -1,6 +1,7 @@
 import React, { useEffect, useCallback } from 'react';
 import {
   View,
+  Text,
   FlatList,
   StyleSheet,
   RefreshControl,
@@ -17,6 +18,7 @@ import OfflineBanner from '../components/OfflineBanner';
 import LoadingView from '../components/LoadingView';
 import EmptyState from '../components/EmptyState';
 import { t } from '../i18n/strings';
+import { colors, spacing } from '../theme';
 
 const HomeScreen: React.FC = () => {
   const prayers = useSalahStore((s) => s.prayers);
@@ -51,8 +53,8 @@ const HomeScreen: React.FC = () => {
 
   const getItemLayout = useCallback(
     (_data: ArrayLike<Prayer> | null | undefined, index: number) => ({
-      length: 120,
-      offset: 120 * index,
+      length: 110,
+      offset: 110 * index,
       index,
     }),
     [],
@@ -75,6 +77,9 @@ const HomeScreen: React.FC = () => {
           <>
             <MasterToggle />
             {nextPrayer && <CountdownTimer prayer={nextPrayer} />}
+            {prayers.length > 0 && (
+              <Text style={styles.sectionLabel}>{t('schedule')}</Text>
+            )}
           </>
         }
         ListEmptyComponent={
@@ -84,8 +89,9 @@ const HomeScreen: React.FC = () => {
           <RefreshControl
             refreshing={isLoading}
             onRefresh={handleRefresh}
-            colors={['#1B5E20']}
-            tintColor="#1B5E20"
+            colors={[colors.accent.emerald]}
+            tintColor={colors.accent.emerald}
+            progressBackgroundColor={colors.bg.secondary}
           />
         }
         contentContainerStyle={styles.listContent}
@@ -98,10 +104,20 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.bg.primary,
   },
   listContent: {
-    paddingBottom: 16,
+    paddingBottom: 20,
+  },
+  sectionLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.text.muted,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
   },
 });
 

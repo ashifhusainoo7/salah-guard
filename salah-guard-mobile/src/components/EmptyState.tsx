@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
+import { colors, spacing } from '../theme';
 
 interface EmptyStateProps {
   icon: string;
@@ -9,7 +10,7 @@ interface EmptyStateProps {
 
 const EmptyState: React.FC<EmptyStateProps> = React.memo(({ icon, message }) => (
   <View style={styles.container}>
-    <Icon name={icon} size={64} color="#BDBDBD" />
+    <Icon name={icon as any} size={64} color={colors.text.muted} />
     <Text style={styles.text}>{message}</Text>
   </View>
 ));
@@ -21,12 +22,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 32,
+    padding: spacing.xxxl,
   },
   text: {
-    marginTop: 16,
+    marginTop: spacing.lg,
     fontSize: 15,
-    color: '#9E9E9E',
+    color: colors.text.secondary,
     textAlign: 'center',
   },
 });

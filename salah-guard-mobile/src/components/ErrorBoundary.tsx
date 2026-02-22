@@ -1,6 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { t } from '../i18n/strings';
+import { colors, spacing, radius } from '../theme';
 
 interface Props {
   children: ReactNode;
@@ -58,39 +59,39 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
-    backgroundColor: '#F5F5F5',
+    padding: spacing.xxl,
+    backgroundColor: colors.bg.primary,
   },
   icon: {
     fontSize: 48,
     fontWeight: '700',
-    color: '#E53935',
-    marginBottom: 16,
+    color: colors.status.error,
+    marginBottom: spacing.lg,
     width: 64,
     height: 64,
     textAlign: 'center',
     lineHeight: 64,
     borderRadius: 32,
     borderWidth: 3,
-    borderColor: '#E53935',
+    borderColor: colors.status.error,
   },
   title: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#212121',
-    marginBottom: 8,
+    color: colors.text.primary,
+    marginBottom: spacing.sm,
   },
   message: {
     fontSize: 14,
-    color: '#757575',
+    color: colors.text.secondary,
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: spacing.xxl,
   },
   retryButton: {
-    backgroundColor: '#1B5E20',
+    backgroundColor: colors.accent.emerald,
     paddingHorizontal: 32,
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: radius.pill,
   },
   retryText: {
     color: '#FFFFFF',

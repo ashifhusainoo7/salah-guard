@@ -6,6 +6,7 @@
 import React, { useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, Linking, Platform } from 'react-native';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
+import { colors, spacing, radius, glassCard } from '../theme';
 
 const IosFocusHelper: React.FC = () => {
   const openFocusSettings = useCallback(() => {
@@ -59,7 +60,7 @@ const IosFocusHelper: React.FC = () => {
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.header}>
-        <Icon name="apple" size={40} color="#1B5E20" />
+        <Icon name="apple" size={40} color={colors.text.primary} />
         <Text style={styles.title}>iOS Focus Mode Setup</Text>
         <Text style={styles.subtitle}>
           iOS does not allow apps to control Do Not Disturb directly. Follow
@@ -70,7 +71,7 @@ const IosFocusHelper: React.FC = () => {
       {steps.map((step, index) => (
         <View key={index} style={styles.stepCard}>
           <View style={styles.stepIcon}>
-            <Icon name={step.icon} size={24} color="#1B5E20" />
+            <Icon name={step.icon as any} size={22} color={colors.accent.emerald} />
           </View>
           <View style={styles.stepContent}>
             <Text style={styles.stepTitle}>{step.title}</Text>
@@ -96,47 +97,41 @@ const IosFocusHelper: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.bg.primary,
   },
   content: {
-    padding: 16,
+    padding: spacing.lg,
     paddingBottom: 32,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 24,
-    padding: 16,
+    marginBottom: spacing.xxl,
+    padding: spacing.lg,
   },
   title: {
     fontSize: 22,
     fontWeight: '800',
-    color: '#1B5E20',
-    marginTop: 12,
+    color: colors.text.primary,
+    marginTop: spacing.md,
   },
   subtitle: {
     fontSize: 14,
-    color: '#666',
+    color: colors.text.secondary,
     textAlign: 'center',
-    marginTop: 8,
+    marginTop: spacing.sm,
     lineHeight: 20,
   },
   stepCard: {
+    ...glassCard,
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
   },
   stepIcon: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#E8F5E9',
+    backgroundColor: colors.accent.emeraldDim,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
@@ -147,26 +142,26 @@ const styles = StyleSheet.create({
   stepTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#212121',
+    color: colors.text.primary,
     marginBottom: 4,
   },
   stepDescription: {
     fontSize: 13,
-    color: '#666',
+    color: colors.text.secondary,
     lineHeight: 19,
   },
   buttonContainer: {
-    marginTop: 16,
+    marginTop: spacing.lg,
     alignItems: 'center',
   },
   openSettingsButton: {
-    backgroundColor: '#1B5E20',
+    backgroundColor: colors.accent.emerald,
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '700',
     paddingHorizontal: 32,
     paddingVertical: 14,
-    borderRadius: 10,
+    borderRadius: radius.pill,
     overflow: 'hidden',
     textAlign: 'center',
   },

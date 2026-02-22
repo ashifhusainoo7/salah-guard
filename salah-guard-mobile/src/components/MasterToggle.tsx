@@ -2,9 +2,7 @@ import React, { useCallback } from 'react';
 import { View, Text, Switch, StyleSheet } from 'react-native';
 import { t } from '../i18n/strings';
 import useSalahStore from '../store/useSalahStore';
-
-const ACTIVE_COLOR = '#1B5E20';
-const INACTIVE_COLOR = '#757575';
+import { colors, radius, spacing, glassCard } from '../theme';
 
 const MasterToggle: React.FC = React.memo(() => {
   const isGloballyActive = useSalahStore((s) => s.settings.isGloballyActive);
@@ -19,17 +17,25 @@ const MasterToggle: React.FC = React.memo(() => {
       <View
         style={[
           styles.card,
-          { backgroundColor: isGloballyActive ? ACTIVE_COLOR : INACTIVE_COLOR },
+          isGloballyActive && styles.cardActive,
         ]}
       >
-        <Text style={styles.label}>
-          {isGloballyActive ? t('salahGuardActive') : t('salahGuardInactive')}
-        </Text>
+        <View style={styles.textWrap}>
+          <Text style={styles.label}>
+            {isGloballyActive ? t('salahGuardActive') : t('salahGuardInactive')}
+          </Text>
+          <Text style={styles.sublabel}>
+            {isGloballyActive ? 'DND will activate during prayers' : 'All prayers paused'}
+          </Text>
+        </View>
         <Switch
           value={isGloballyActive}
           onValueChange={handleToggle}
-          trackColor={{ false: '#B0B0B0', true: '#A5D6A7' }}
-          thumbColor={isGloballyActive ? '#FFD700' : '#E0E0E0'}
+          trackColor={{
+            false: colors.switch.trackInactive,
+            true: colors.switch.trackActive,
+          }}
+          thumbColor={isGloballyActive ? colors.switch.thumbActive : colors.switch.thumbInactive}
           testID="master-toggle"
         />
       </View>
@@ -41,27 +47,36 @@ MasterToggle.displayName = 'MasterToggle';
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: 16,
-    marginTop: 16,
-    marginBottom: 8,
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
   },
   card: {
+    ...glassCard,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderRadius: 16,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
+  },
+  cardActive: {
+    borderColor: colors.accent.emerald,
+    borderWidth: 1,
+  },
+  textWrap: {
+    flex: 1,
+    marginRight: spacing.md,
   },
   label: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: colors.text.primary,
+  },
+  sublabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: colors.text.secondary,
+    marginTop: 2,
   },
 });
 

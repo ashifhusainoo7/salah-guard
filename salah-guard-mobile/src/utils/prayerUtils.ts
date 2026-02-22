@@ -121,12 +121,12 @@ export function getMergedDndWindows(
  * Returns a color for a prayer based on its position in the daily schedule.
  */
 export function getPrayerColor(prayerName: string): string {
-  const colors: Record<string, string> = {
+  const colorMap: Record<string, string> = {
     Fajr: '#4A90D9',
-    Dhuhr: '#F5A623',
-    Asr: '#E67E22',
-    Maghrib: '#E74C3C',
-    Isha: '#8E44AD',
+    Dhuhr: '#F59E0B',
+    Asr: '#F97316',
+    Maghrib: '#F43F5E',
+    Isha: '#8B5CF6',
   };
-  return colors[prayerName] ?? '#1B5E20';
+  return colorMap[prayerName] ?? '#10B981';
 }

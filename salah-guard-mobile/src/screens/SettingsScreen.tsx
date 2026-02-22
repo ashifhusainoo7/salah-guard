@@ -21,6 +21,7 @@ import { resetApiClient } from '../services/api';
 import { getApiUrl, setApiUrl } from '../utils/storage';
 import OfflineBanner from '../components/OfflineBanner';
 import { t } from '../i18n/strings';
+import { colors, spacing, radius, glassCard } from '../theme';
 
 const APP_VERSION = '1.0.0';
 
@@ -40,7 +41,6 @@ const SettingsScreen: React.FC = () => {
   const handleRequestDndPermission = useCallback(async () => {
     try {
       await requestDndPermission();
-      // Re-check after returning from settings
       setTimeout(async () => {
         const granted = await hasDndPermission();
         setHasDnd(granted);
@@ -89,9 +89,8 @@ const SettingsScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.sectionTitle}>{t('settings')}</Text>
-
         {/* Notification Settings */}
+        <Text style={styles.sectionTitle}>Notifications</Text>
         <View style={styles.section}>
           <SettingsRow
             icon="bell-ring-outline"
@@ -99,12 +98,14 @@ const SettingsScreen: React.FC = () => {
             value={settings.silentNotificationOnStart}
             onToggle={(val) => handleToggle('silentNotificationOnStart', val)}
           />
+          <View style={styles.divider} />
           <SettingsRow
             icon="bell-check-outline"
             label={t('showLiftedNotification')}
             value={settings.showLiftedNotification}
             onToggle={(val) => handleToggle('showLiftedNotification', val)}
           />
+          <View style={styles.divider} />
           <SettingsRow
             icon="theme-light-dark"
             label={t('darkMode')}
@@ -121,35 +122,42 @@ const SettingsScreen: React.FC = () => {
             onPress={handleRequestDndPermission}
             activeOpacity={0.7}
           >
-            <Icon name="do-not-disturb" size={20} color="#1B5E20" />
+            <Icon name="do-not-disturb" size={20} color={colors.accent.emerald} />
             <View style={styles.actionContent}>
               <Text style={styles.actionLabel}>
                 {t('requestDndPermission')}
               </Text>
               {hasDnd !== null && (
-                <Text
-                  style={[
-                    styles.statusLabel,
-                    { color: hasDnd ? '#2E7D32' : '#EF6C00' },
-                  ]}
-                >
-                  {hasDnd ? 'Granted' : 'Not Granted'}
-                </Text>
+                <View style={[
+                  styles.statusPill,
+                  { backgroundColor: hasDnd ? colors.status.successBg : colors.status.warningBg },
+                ]}>
+                  <Text
+                    style={[
+                      styles.statusLabel,
+                      { color: hasDnd ? colors.status.success : colors.status.warning },
+                    ]}
+                  >
+                    {hasDnd ? 'Granted' : 'Not Granted'}
+                  </Text>
+                </View>
               )}
             </View>
-            <Icon name="chevron-right" size={20} color="#999" />
+            <Icon name="chevron-right" size={20} color={colors.text.muted} />
           </TouchableOpacity>
+
+          <View style={styles.divider} />
 
           <TouchableOpacity
             style={styles.actionRow}
             onPress={handleBatteryOptimization}
             activeOpacity={0.7}
           >
-            <Icon name="battery-heart-outline" size={20} color="#1B5E20" />
+            <Icon name="battery-heart-outline" size={20} color={colors.accent.emerald} />
             <Text style={styles.actionLabel}>
               {t('excludeBatteryOptimization')}
             </Text>
-            <Icon name="chevron-right" size={20} color="#999" />
+            <Icon name="chevron-right" size={20} color={colors.text.muted} />
           </TouchableOpacity>
         </View>
 
@@ -162,7 +170,7 @@ const SettingsScreen: React.FC = () => {
               value={apiUrl}
               onChangeText={setApiUrlState}
               placeholder="http://10.0.2.2:5000"
-              placeholderTextColor="#999"
+              placeholderTextColor={colors.text.muted}
               autoCapitalize="none"
               autoCorrect={false}
               keyboardType="url"
@@ -181,18 +189,19 @@ const SettingsScreen: React.FC = () => {
         <Text style={styles.sectionTitle}>About</Text>
         <View style={styles.section}>
           <View style={styles.infoRow}>
-            <Icon name="information-outline" size={20} color="#666" />
+            <Icon name="information-outline" size={20} color={colors.text.secondary} />
             <Text style={styles.infoLabel}>{t('appVersion')}</Text>
             <Text style={styles.infoValue}>{APP_VERSION}</Text>
           </View>
+          <View style={styles.divider} />
           <TouchableOpacity
             style={styles.actionRow}
             onPress={handlePrivacyPolicy}
             activeOpacity={0.7}
           >
-            <Icon name="shield-check-outline" size={20} color="#1B5E20" />
+            <Icon name="shield-check-outline" size={20} color={colors.accent.emerald} />
             <Text style={styles.actionLabel}>Privacy Policy</Text>
-            <Icon name="open-in-new" size={16} color="#999" />
+            <Icon name="open-in-new" size={16} color={colors.text.muted} />
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -210,13 +219,16 @@ interface SettingsRowProps {
 const SettingsRow: React.FC<SettingsRowProps> = React.memo(
   ({ icon, label, value, onToggle }) => (
     <View style={styles.settingsRow}>
-      <Icon name={icon} size={20} color="#1B5E20" />
+      <Icon name={icon as any} size={20} color={colors.accent.emerald} />
       <Text style={styles.settingsLabel}>{label}</Text>
       <Switch
         value={value}
         onValueChange={onToggle}
-        trackColor={{ false: '#E0E0E0', true: '#A5D6A7' }}
-        thumbColor={value ? '#1B5E20' : '#BDBDBD'}
+        trackColor={{
+          false: colors.switch.trackInactive,
+          true: colors.switch.trackActive,
+        }}
+        thumbColor={value ? colors.switch.thumbActive : colors.switch.thumbInactive}
       />
     </View>
   ),
@@ -227,52 +239,48 @@ SettingsRow.displayName = 'SettingsRow';
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.bg.primary,
   },
   scrollContent: {
-    padding: 16,
+    padding: spacing.lg,
     paddingBottom: 32,
   },
   sectionTitle: {
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: '700',
-    color: '#1B5E20',
+    color: colors.text.muted,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginTop: 16,
-    marginBottom: 8,
+    letterSpacing: 1,
+    marginTop: spacing.xl,
+    marginBottom: spacing.sm,
     marginLeft: 4,
   },
   section: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
+    ...glassCard,
     overflow: 'hidden',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.bg.cardBorder,
+    marginHorizontal: spacing.lg,
   },
   settingsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    padding: spacing.lg,
     gap: 12,
-    borderBottomWidth: 0.5,
-    borderBottomColor: '#F0F0F0',
   },
   settingsLabel: {
     flex: 1,
     fontSize: 14,
-    color: '#333',
+    fontWeight: '500',
+    color: colors.text.primary,
   },
   actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    padding: spacing.lg,
     gap: 12,
-    borderBottomWidth: 0.5,
-    borderBottomColor: '#F0F0F0',
   },
   actionContent: {
     flex: 1,
@@ -280,34 +288,42 @@ const styles = StyleSheet.create({
   actionLabel: {
     flex: 1,
     fontSize: 14,
-    color: '#333',
+    fontWeight: '500',
+    color: colors.text.primary,
+  },
+  statusPill: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: radius.pill,
+    marginTop: 4,
   },
   statusLabel: {
-    fontSize: 12,
-    fontWeight: '500',
-    marginTop: 2,
+    fontSize: 11,
+    fontWeight: '600',
   },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
-    gap: 8,
+    padding: spacing.md,
+    gap: spacing.sm,
   },
   input: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
+    borderColor: colors.bg.cardBorder,
+    backgroundColor: colors.bg.input,
+    borderRadius: radius.sm,
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 10,
     fontSize: 14,
-    color: '#333',
+    color: colors.text.primary,
   },
   saveUrlButton: {
-    backgroundColor: '#1B5E20',
+    backgroundColor: colors.accent.emerald,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: radius.sm,
   },
   saveUrlText: {
     color: '#FFFFFF',
@@ -317,19 +333,18 @@ const styles = StyleSheet.create({
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    padding: spacing.lg,
     gap: 12,
-    borderBottomWidth: 0.5,
-    borderBottomColor: '#F0F0F0',
   },
   infoLabel: {
     flex: 1,
     fontSize: 14,
-    color: '#333',
+    fontWeight: '500',
+    color: colors.text.primary,
   },
   infoValue: {
     fontSize: 14,
-    color: '#999',
+    color: colors.text.muted,
   },
 });
 

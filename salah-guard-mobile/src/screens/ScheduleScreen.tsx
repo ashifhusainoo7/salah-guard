@@ -7,7 +7,6 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
-// DateTimePicker removed for web compatibility
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import type { Prayer } from '../types';
 import useSalahStore from '../store/useSalahStore';
@@ -15,7 +14,10 @@ import DurationSlider from '../components/DurationSlider';
 import OfflineBanner from '../components/OfflineBanner';
 import LoadingView from '../components/LoadingView';
 import { parseTime } from '../utils/timeUtils';
+import { getPrayerColor } from '../utils/prayerUtils';
+import { getPrayerGradient } from '../theme';
 import { t } from '../i18n/strings';
+import { colors, spacing, radius, glassCard } from '../theme';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
 type DayAbbr = (typeof DAYS)[number];
@@ -73,13 +75,10 @@ const ScheduleScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.screenTitle}>{t('prayerSchedule')}</Text>
-
         {prayers.map((prayer) => {
           const isEditing = editingPrayerId === prayer.id;
-          const { hours, minutes } = parseTime(prayer.scheduledTime);
-          const pickerDate = new Date();
-          pickerDate.setHours(hours, minutes, 0, 0);
+          const gradient = getPrayerGradient(prayer.name);
+          const prayerColor = getPrayerColor(prayer.name);
 
           return (
             <View key={prayer.id} style={styles.prayerSection}>
@@ -91,32 +90,34 @@ const ScheduleScreen: React.FC = () => {
                 activeOpacity={0.7}
               >
                 <View style={styles.prayerNameRow}>
-                  <Icon name="mosque" size={20} color="#1B5E20" />
+                  <View style={[styles.colorDot, { backgroundColor: prayerColor }]} />
+                  <Icon name={gradient.icon as any} size={20} color={prayerColor} />
                   <Text style={styles.prayerName}>
-                    {prayer.name} {prayer.arabicName}
+                    {prayer.name}
                   </Text>
+                  <Text style={styles.arabicName}>{prayer.arabicName}</Text>
                 </View>
                 <Icon
                   name={isEditing ? 'chevron-up' : 'chevron-down'}
-                  size={24}
-                  color="#666"
+                  size={22}
+                  color={colors.text.muted}
                 />
               </TouchableOpacity>
 
               {isEditing && (
                 <View style={styles.editSection}>
-                  {/* Time picker */}
                   <TouchableOpacity
                     style={styles.timeButton}
                     onPress={() => handleTimePress(prayer)}
                     activeOpacity={0.7}
                   >
-                    <Icon name="clock-outline" size={20} color="#1B5E20" />
-                    <Text style={styles.timeText}>{prayer.scheduledTime}</Text>
+                    <Icon name="clock-outline" size={20} color={prayerColor} />
+                    <Text style={[styles.timeText, { color: prayerColor }]}>
+                      {prayer.scheduledTime}
+                    </Text>
                     <Text style={styles.changeText}>Change</Text>
                   </TouchableOpacity>
 
-                  {/* Duration slider */}
                   <DurationSlider
                     value={prayer.durationMinutes}
                     onValueChange={(val) =>
@@ -124,7 +125,6 @@ const ScheduleScreen: React.FC = () => {
                     }
                   />
 
-                  {/* Day selector */}
                   <Text style={styles.sectionLabel}>{t('daysOfWeek')}</Text>
                   <View style={styles.daysRow}>
                     {DAYS.map((day) => {
@@ -152,7 +152,6 @@ const ScheduleScreen: React.FC = () => {
                     })}
                   </View>
 
-                  {/* Save button */}
                   <TouchableOpacity
                     style={styles.saveButton}
                     onPress={handleSave}
@@ -166,7 +165,6 @@ const ScheduleScreen: React.FC = () => {
           );
         })}
       </ScrollView>
-
     </View>
   );
 };
@@ -174,76 +172,73 @@ const ScheduleScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.bg.primary,
   },
   scrollContent: {
-    padding: 16,
+    padding: spacing.lg,
     paddingBottom: 32,
   },
-  screenTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#1B5E20',
-    marginBottom: 16,
-  },
   prayerSection: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    marginBottom: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
+    ...glassCard,
+    marginBottom: spacing.md,
     overflow: 'hidden',
   },
   prayerHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
+    padding: spacing.lg,
   },
   prayerNameRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
   },
+  colorDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
   prayerName: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#212121',
+    color: colors.text.primary,
+  },
+  arabicName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text.secondary,
   },
   editSection: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    borderTopColor: colors.bg.cardBorder,
   },
   timeButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingVertical: 12,
+    paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: colors.bg.cardBorder,
   },
   timeText: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#1B5E20',
     flex: 1,
   },
   changeText: {
     fontSize: 13,
-    color: '#1B5E20',
+    color: colors.text.muted,
     fontWeight: '500',
   },
   sectionLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#333',
-    marginTop: 12,
-    marginBottom: 8,
+    color: colors.text.secondary,
+    marginTop: spacing.md,
+    marginBottom: spacing.sm,
   },
   daysRow: {
     flexDirection: 'row',
@@ -251,28 +246,33 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   dayButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    backgroundColor: '#F0F0F0',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.bg.cardBorder,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   dayButtonActive: {
-    backgroundColor: '#1B5E20',
+    backgroundColor: colors.accent.emerald,
+    borderColor: colors.accent.emerald,
   },
   dayText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
-    color: '#666',
+    color: colors.text.muted,
   },
   dayTextActive: {
     color: '#FFFFFF',
+    fontWeight: '700',
   },
   saveButton: {
-    backgroundColor: '#1B5E20',
+    backgroundColor: colors.accent.emerald,
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: radius.pill,
     alignItems: 'center',
-    marginTop: 16,
+    marginTop: spacing.lg,
   },
   saveButtonText: {
     color: '#FFFFFF',

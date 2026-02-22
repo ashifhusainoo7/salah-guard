@@ -1,11 +1,13 @@
-import React, { useCallback, useState } from 'react';
-import { View, Text, Switch, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useCallback } from 'react';
+import { View, Text, Switch, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import type { Prayer } from '../types';
 import { getPrayerColor } from '../utils/prayerUtils';
-import { parseTime } from '../utils/timeUtils';
 import { t } from '../i18n/strings';
 import useSalahStore from '../store/useSalahStore';
+import { getPrayerGradient } from '../theme';
+import { colors, spacing, glassCard } from '../theme';
+import GradientCard from './GradientCard';
 
 interface PrayerCardProps {
   prayer: Prayer;
@@ -22,37 +24,45 @@ const PrayerCard: React.FC<PrayerCardProps> = React.memo(({ prayer, isNext }) =>
     [prayer.id, updatePrayer],
   );
 
+  const gradient = getPrayerGradient(prayer.name);
   const prayerColor = getPrayerColor(prayer.name);
 
   return (
-    <View style={[styles.container, isNext && styles.highlighted]}>
-      <View style={[styles.colorStrip, { backgroundColor: prayerColor }]} />
-      <View style={styles.content}>
+    <View style={styles.container}>
+      <GradientCard
+        gradientColors={[gradient.start, gradient.end]}
+        accentSide
+        style={[isNext && styles.highlighted]}
+      >
         <View style={styles.header}>
           <View style={styles.nameRow}>
-            <Icon name="mosque" size={20} color={prayerColor} />
+            <Icon name={gradient.icon as any} size={20} color={prayerColor} />
             <Text style={styles.name}>{prayer.name}</Text>
             <Text style={styles.arabicName}>{prayer.arabicName}</Text>
           </View>
           <Switch
             value={prayer.isEnabled}
             onValueChange={handleToggle}
-            trackColor={{ false: '#E0E0E0', true: '#A5D6A7' }}
-            thumbColor={prayer.isEnabled ? '#1B5E20' : '#BDBDBD'}
+            trackColor={{
+              false: colors.switch.trackInactive,
+              true: colors.switch.trackActive,
+            }}
+            thumbColor={prayer.isEnabled ? colors.switch.thumbActive : colors.switch.thumbInactive}
             testID={`prayer-toggle-${prayer.name}`}
           />
         </View>
 
-        <View style={styles.timeRow}>
-          <Icon name="clock-outline" size={16} color="#666" />
-          <Text style={styles.time}>{prayer.scheduledTime}</Text>
-        </View>
-
-        <View style={styles.durationRow}>
-          <Icon name="timer-sand" size={14} color="#666" />
-          <Text style={styles.duration}>
-            {prayer.durationMinutes} {t('minutes')}
-          </Text>
+        <View style={styles.detailRow}>
+          <View style={styles.timeWrap}>
+            <Icon name="clock-outline" size={14} color={colors.text.secondary} />
+            <Text style={styles.time}>{prayer.scheduledTime}</Text>
+          </View>
+          <View style={styles.durationWrap}>
+            <Icon name="timer-sand" size={13} color={colors.text.muted} />
+            <Text style={styles.duration}>
+              {prayer.durationMinutes} {t('minutes')}
+            </Text>
+          </View>
         </View>
 
         {isNext && (
@@ -60,7 +70,7 @@ const PrayerCard: React.FC<PrayerCardProps> = React.memo(({ prayer, isNext }) =>
             <Text style={styles.nextBadgeText}>{t('nextPrayer')}</Text>
           </View>
         )}
-      </View>
+      </GradientCard>
     </View>
   );
 });
@@ -69,34 +79,18 @@ PrayerCard.displayName = 'PrayerCard';
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: 16,
-    marginVertical: 6,
-    borderRadius: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    overflow: 'hidden',
+    marginHorizontal: spacing.lg,
+    marginVertical: 5,
   },
   highlighted: {
-    borderWidth: 2,
-    borderColor: '#FFD700',
-  },
-  colorStrip: {
-    width: 5,
-  },
-  content: {
-    flex: 1,
-    padding: 14,
+    borderColor: colors.accent.gold,
+    borderWidth: 1,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
   nameRow: {
     flexDirection: 'row',
@@ -106,46 +100,53 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#212121',
+    color: colors.text.primary,
   },
   arabicName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#666',
+    color: colors.text.secondary,
   },
-  timeRow: {
+  detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginBottom: 4,
+    gap: 16,
+  },
+  timeWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
   },
   time: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
-    color: '#1B5E20',
+    color: colors.text.primary,
   },
-  durationRow: {
+  durationWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
   duration: {
-    fontSize: 13,
-    color: '#666',
+    fontSize: 12,
+    color: colors.text.muted,
   },
   nextBadge: {
     position: 'absolute',
     top: 0,
     right: 0,
-    backgroundColor: '#FFD700',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderBottomLeftRadius: 8,
+    backgroundColor: colors.accent.goldDim,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderBottomLeftRadius: 10,
+    borderTopRightRadius: 4,
   },
   nextBadgeText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#1B5E20',
+    color: colors.accent.gold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 });
 

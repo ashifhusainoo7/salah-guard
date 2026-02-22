@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { t } from '../i18n/strings';
+import { colors, spacing, radius } from '../theme';
 
 interface DurationSliderProps {
   value: number;
@@ -19,9 +20,6 @@ const DurationSlider: React.FC<DurationSliderProps> = React.memo(
     minimumValue = MIN_VALUE,
     maximumValue = MAX_VALUE,
   }) => {
-    const range = maximumValue - minimumValue;
-    const percentage = ((value - minimumValue) / range) * 100;
-
     const handlePress = useCallback(
       (newVal: number) => {
         onValueChange(newVal);
@@ -32,23 +30,23 @@ const DurationSlider: React.FC<DurationSliderProps> = React.memo(
     return (
       <View style={styles.container}>
         <Text style={styles.label}>
-          {t('dndDuration')}: {value} {t('minutes')}
+          {t('dndDuration')}: <Text style={styles.valueText}>{value} {t('minutes')}</Text>
         </Text>
-        <View style={styles.track}>
-          <View style={[styles.fill, { width: `${percentage}%` }]} />
-        </View>
-        <View style={styles.buttonsRow}>
+        <View style={styles.pillRow}>
           {Array.from(
             { length: (maximumValue - minimumValue) / 5 + 1 },
             (_, i) => minimumValue + i * 5,
           ).map((v) => (
-            <Text
+            <TouchableOpacity
               key={v}
-              style={[styles.stepButton, v === value && styles.stepButtonActive]}
+              style={[styles.pill, v === value && styles.pillActive]}
               onPress={() => handlePress(v)}
+              activeOpacity={0.7}
             >
-              {v}
-            </Text>
+              <Text style={[styles.pillText, v === value && styles.pillTextActive]}>
+                {v}
+              </Text>
+            </TouchableOpacity>
           ))}
         </View>
       </View>
@@ -60,42 +58,41 @@ DurationSlider.displayName = 'DurationSlider';
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 8,
+    paddingVertical: spacing.sm,
   },
   label: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
+    color: colors.text.secondary,
+    marginBottom: spacing.sm,
   },
-  track: {
-    height: 6,
-    backgroundColor: '#E0E0E0',
-    borderRadius: 3,
-    overflow: 'hidden',
+  valueText: {
+    color: colors.text.primary,
+    fontWeight: '700',
   },
-  fill: {
-    height: '100%',
-    backgroundColor: '#1B5E20',
-    borderRadius: 3,
-  },
-  buttonsRow: {
+  pillRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 8,
+    gap: 8,
   },
-  stepButton: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    fontSize: 12,
-    color: '#666',
-    backgroundColor: '#F0F0F0',
-    textAlign: 'center',
-    overflow: 'hidden',
+  pill: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.bg.cardBorder,
+    backgroundColor: 'transparent',
+    alignItems: 'center',
   },
-  stepButtonActive: {
-    backgroundColor: '#1B5E20',
+  pillActive: {
+    backgroundColor: colors.accent.emerald,
+    borderColor: colors.accent.emerald,
+  },
+  pillText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.text.muted,
+  },
+  pillTextActive: {
     color: '#FFFFFF',
     fontWeight: '700',
   },

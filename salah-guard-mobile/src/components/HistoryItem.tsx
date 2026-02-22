@@ -4,37 +4,53 @@ import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import type { DndSession } from '../types';
 import { formatIsoToDateTime } from '../utils/timeUtils';
 import { getPrayerColor } from '../utils/prayerUtils';
+import { getPrayerGradient } from '../theme';
 import { t } from '../i18n/strings';
+import { colors, spacing, glassCard } from '../theme';
+import GradientCard from './GradientCard';
 
 interface HistoryItemProps {
   session: DndSession;
 }
 
 const HistoryItem: React.FC<HistoryItemProps> = React.memo(({ session }) => {
-  const color = getPrayerColor(session.prayerName);
+  const gradient = getPrayerGradient(session.prayerName);
   const isCompleted = session.status === 'Completed';
 
   return (
     <View style={styles.container}>
-      <View style={[styles.colorStrip, { backgroundColor: color }]} />
-      <View style={styles.content}>
+      <GradientCard
+        gradientColors={[gradient.start, gradient.end]}
+        accentSide
+      >
         <View style={styles.header}>
-          <Text style={styles.prayerName}>{session.prayerName}</Text>
+          <View style={styles.nameRow}>
+            <Icon name={gradient.icon as any} size={16} color={getPrayerColor(session.prayerName)} />
+            <Text style={styles.prayerName}>{session.prayerName}</Text>
+          </View>
           <View
             style={[
               styles.statusBadge,
-              { backgroundColor: isCompleted ? '#E8F5E9' : '#FFF3E0' },
+              {
+                backgroundColor: isCompleted
+                  ? colors.status.successBg
+                  : colors.status.warningBg,
+              },
             ]}
           >
             <Icon
               name={isCompleted ? 'check-circle' : 'alert-circle'}
-              size={14}
-              color={isCompleted ? '#2E7D32' : '#EF6C00'}
+              size={12}
+              color={isCompleted ? colors.status.success : colors.status.warning}
             />
             <Text
               style={[
                 styles.statusText,
-                { color: isCompleted ? '#2E7D32' : '#EF6C00' },
+                {
+                  color: isCompleted
+                    ? colors.status.success
+                    : colors.status.warning,
+                },
               ]}
             >
               {isCompleted ? t('completed') : t('interrupted')}
@@ -43,25 +59,25 @@ const HistoryItem: React.FC<HistoryItemProps> = React.memo(({ session }) => {
         </View>
         <View style={styles.details}>
           <View style={styles.detailRow}>
-            <Icon name="clock-start" size={14} color="#666" />
+            <Icon name="clock-start" size={13} color={colors.text.muted} />
             <Text style={styles.detailText}>
-              {t('startTime')}: {formatIsoToDateTime(session.startTime)}
+              {formatIsoToDateTime(session.startTime)}
             </Text>
           </View>
           <View style={styles.detailRow}>
-            <Icon name="clock-end" size={14} color="#666" />
+            <Icon name="clock-end" size={13} color={colors.text.muted} />
             <Text style={styles.detailText}>
-              {t('endTime')}: {formatIsoToDateTime(session.endTime)}
+              {formatIsoToDateTime(session.endTime)}
             </Text>
           </View>
           <View style={styles.detailRow}>
-            <Icon name="timer-sand" size={14} color="#666" />
+            <Icon name="timer-sand" size={13} color={colors.text.muted} />
             <Text style={styles.detailText}>
               {session.durationMinutes} {t('minutes')}
             </Text>
           </View>
         </View>
-      </View>
+      </GradientCard>
     </View>
   );
 });
@@ -70,43 +86,32 @@ HistoryItem.displayName = 'HistoryItem';
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: 16,
+    marginHorizontal: spacing.lg,
     marginVertical: 4,
-    borderRadius: 10,
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
-    overflow: 'hidden',
-  },
-  colorStrip: {
-    width: 4,
-  },
-  content: {
-    flex: 1,
-    padding: 12,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: spacing.sm,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   prayerName: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#212121',
+    color: colors.text.primary,
   },
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
   },
   statusText: {
     fontSize: 11,
@@ -122,7 +127,7 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 12,
-    color: '#666',
+    color: colors.text.secondary,
   },
 });
 

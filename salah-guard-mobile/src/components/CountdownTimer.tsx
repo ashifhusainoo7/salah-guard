@@ -2,7 +2,9 @@ import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import type { Prayer } from '../types';
 import { getMillisUntilTime, formatCountdown } from '../utils/timeUtils';
+import { getPrayerColor } from '../utils/prayerUtils';
 import { t } from '../i18n/strings';
+import { colors, spacing, glassCard } from '../theme';
 
 interface CountdownTimerProps {
   prayer: Prayer;
@@ -28,14 +30,20 @@ const CountdownTimer: React.FC<CountdownTimerProps> = React.memo(({ prayer }) =>
     };
   }, [prayer.scheduledTime]);
 
+  const prayerColor = getPrayerColor(prayer.name);
+
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>
-        {t('nextPrayer')}: {prayer.name} {prayer.arabicName}
-      </Text>
-      <Text style={styles.countdown}>
-        {t('countdown')} {formatCountdown(remaining)}
-      </Text>
+      <View style={styles.card}>
+        <Text style={styles.arabicName}>{prayer.arabicName}</Text>
+        <Text style={styles.label}>
+          {t('nextPrayer')} — {prayer.name}
+        </Text>
+        <Text style={[styles.countdown, { color: prayerColor }]}>
+          {formatCountdown(remaining)}
+        </Text>
+        <Text style={styles.time}>{prayer.scheduledTime}</Text>
+      </View>
     </View>
   );
 });
@@ -44,24 +52,39 @@ CountdownTimer.displayName = 'CountdownTimer';
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFD700',
-    marginHorizontal: 16,
-    marginVertical: 8,
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
+    marginHorizontal: spacing.lg,
+    marginVertical: spacing.sm,
   },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1B5E20',
+  card: {
+    ...glassCard,
+    alignItems: 'center',
+    paddingVertical: spacing.xl,
+    paddingHorizontal: spacing.xl,
+  },
+  arabicName: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: colors.text.primary,
     marginBottom: 4,
   },
+  label: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.text.secondary,
+    marginBottom: spacing.md,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
   countdown: {
-    fontSize: 24,
+    fontSize: 40,
     fontWeight: '800',
-    color: '#1B5E20',
+    letterSpacing: -1,
+    marginBottom: 4,
+  },
+  time: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.text.muted,
   },
 });
 

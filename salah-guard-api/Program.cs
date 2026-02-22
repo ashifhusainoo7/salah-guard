@@ -88,17 +88,15 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options =>
 });
 
 // --- CORS ---
+// Mobile apps (APKs) don't send Origin headers, so CORS is irrelevant for native clients.
+// AllowAnyOrigin permits web-based testing tools (Swagger, Postman web, etc.).
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("MobileApp", policy =>
     {
-        var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-            ?? new[] { "http://localhost:8081" };
-
-        policy.WithOrigins(allowedOrigins)
+        policy.AllowAnyOrigin()
             .AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowCredentials();
+            .AllowAnyHeader();
     });
 });
 
@@ -177,10 +175,11 @@ app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseIpRateLimiting();
 app.UseResponseCompression();
 
+// Note: HTTPS redirect removed — Render terminates SSL at its edge proxy,
+// so the app runs on HTTP internally. UseHttpsRedirection would cause loops.
 if (!app.Environment.IsDevelopment())
 {
     app.UseHsts();
-    app.UseHttpsRedirection();
 }
 
 app.UseCors("MobileApp");

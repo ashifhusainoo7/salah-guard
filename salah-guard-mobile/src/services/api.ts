@@ -27,7 +27,7 @@ const MAX_RETRIES = 3;
 const RETRY_DELAY_BASE = 1000;
 
 function getBaseUrl(): string {
-  return getApiUrl() ?? 'http://10.93.37.139:5000';
+  return getApiUrl() ?? 'https://salah-guard-api.onrender.com';
 }
 
 let apiClient: AxiosInstance | null = null;
@@ -106,6 +106,7 @@ function createClient(): AxiosInstance {
               refreshToken: tokens.refreshToken,
               deviceId,
             },
+            {},
           );
 
           if (response.data.success && response.data.data) {

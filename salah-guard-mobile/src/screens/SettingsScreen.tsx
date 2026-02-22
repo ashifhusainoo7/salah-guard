@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,8 @@ import {
   StyleSheet,
   Alert,
   Linking,
+  AppState,
+  NativeModules,
 } from 'react-native';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import useSalahStore from '../store/useSalahStore';
@@ -24,12 +26,20 @@ import { t } from '../i18n/strings';
 import { colors, spacing, radius, glassCard } from '../theme';
 
 const APP_VERSION = '1.0.0';
+const isStandalone = !!NativeModules.DndModule;
 
 const SettingsScreen: React.FC = () => {
   const settings = useSalahStore((s) => s.settings);
   const updateSettings = useSalahStore((s) => s.updateSettings);
   const [apiUrl, setApiUrlState] = useState(getApiUrl() ?? '');
   const [hasDnd, setHasDnd] = useState<boolean | null>(null);
+  const appState = useRef(AppState.currentState);
+
+  const checkDndStatus = useCallback(() => {
+    hasDndPermission()
+      .then(setHasDnd)
+      .catch(() => setHasDnd(false));
+  }, []);
 
   const handleToggle = useCallback(
     (key: keyof typeof settings, value: boolean) => {
@@ -39,27 +49,25 @@ const SettingsScreen: React.FC = () => {
   );
 
   const handleRequestDndPermission = useCallback(async () => {
-    try {
+    if (isStandalone) {
       await requestDndPermission();
-      setTimeout(async () => {
-        const granted = await hasDndPermission();
-        setHasDnd(granted);
-        if (granted) {
-          Alert.alert('Success', 'DND permission granted.');
-        }
-      }, 1000);
-    } catch {
-      Alert.alert(t('error'), 'Failed to open DND permission settings.');
+    } else {
+      Alert.alert(
+        'DND Permission',
+        'DND access requires a standalone build. In Expo Go, Salah Guard cannot control Do Not Disturb.\n\nBuild a production APK to enable this feature.',
+        [{ text: 'OK' }],
+      );
     }
   }, []);
 
   const handleBatteryOptimization = useCallback(async () => {
-    try {
+    if (isStandalone) {
       await requestBatteryOptimizationExclusion();
-    } catch {
+    } else {
       Alert.alert(
-        t('error'),
-        'Failed to request battery optimization exclusion.',
+        'Battery Optimization',
+        'Battery optimization exclusion requires a standalone build. In Expo Go, this setting is not available.\n\nBuild a production APK to enable this feature.',
+        [{ text: 'OK' }],
       );
     }
   }, []);
@@ -76,11 +84,20 @@ const SettingsScreen: React.FC = () => {
     Linking.openURL('https://salahguard.app/privacy').catch(() => {});
   }, []);
 
-  React.useEffect(() => {
-    hasDndPermission()
-      .then(setHasDnd)
-      .catch(() => setHasDnd(false));
-  }, []);
+  useEffect(() => {
+    checkDndStatus();
+  }, [checkDndStatus]);
+
+  // Re-check DND permission when the app returns to foreground
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
+        checkDndStatus();
+      }
+      appState.current = nextAppState;
+    });
+    return () => subscription.remove();
+  }, [checkDndStatus]);
 
   return (
     <View style={styles.container}>
@@ -105,13 +122,6 @@ const SettingsScreen: React.FC = () => {
             value={settings.showLiftedNotification}
             onToggle={(val) => handleToggle('showLiftedNotification', val)}
           />
-          <View style={styles.divider} />
-          <SettingsRow
-            icon="theme-light-dark"
-            label={t('darkMode')}
-            value={settings.darkMode}
-            onToggle={(val) => handleToggle('darkMode', val)}
-          />
         </View>
 
         {/* Permissions */}
@@ -127,21 +137,19 @@ const SettingsScreen: React.FC = () => {
               <Text style={styles.actionLabel}>
                 {t('requestDndPermission')}
               </Text>
-              {hasDnd !== null && (
-                <View style={[
-                  styles.statusPill,
-                  { backgroundColor: hasDnd ? colors.status.successBg : colors.status.warningBg },
-                ]}>
-                  <Text
-                    style={[
-                      styles.statusLabel,
-                      { color: hasDnd ? colors.status.success : colors.status.warning },
-                    ]}
-                  >
-                    {hasDnd ? 'Granted' : 'Not Granted'}
-                  </Text>
-                </View>
-              )}
+              <View style={[
+                styles.statusPill,
+                { backgroundColor: hasDnd ? colors.status.successBg : colors.bg.cardHover },
+              ]}>
+                <Text
+                  style={[
+                    styles.statusLabel,
+                    { color: hasDnd ? colors.status.success : colors.text.muted },
+                  ]}
+                >
+                  {hasDnd ? 'Granted' : isStandalone ? 'Not granted' : 'Requires standalone build'}
+                </Text>
+              </View>
             </View>
             <Icon name="chevron-right" size={20} color={colors.text.muted} />
           </TouchableOpacity>
@@ -154,9 +162,16 @@ const SettingsScreen: React.FC = () => {
             activeOpacity={0.7}
           >
             <Icon name="battery-heart-outline" size={20} color={colors.accent.emerald} />
-            <Text style={styles.actionLabel}>
-              {t('excludeBatteryOptimization')}
-            </Text>
+            <View style={styles.actionContent}>
+              <Text style={styles.actionLabel}>
+                {t('excludeBatteryOptimization')}
+              </Text>
+              <View style={[styles.statusPill, { backgroundColor: colors.bg.cardHover }]}>
+                <Text style={[styles.statusLabel, { color: colors.text.muted }]}>
+                  {isStandalone ? 'Tap to configure' : 'Requires standalone build'}
+                </Text>
+              </View>
+            </View>
             <Icon name="chevron-right" size={20} color={colors.text.muted} />
           </TouchableOpacity>
         </View>

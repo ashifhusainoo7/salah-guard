@@ -288,6 +288,7 @@ function withDndAndroidManifest(config) {
       "android.permission.FOREGROUND_SERVICE_SPECIAL_USE",
       "android.permission.RECEIVE_BOOT_COMPLETED",
       "android.permission.VIBRATE",
+      "android.permission.WAKE_LOCK",
       "android.permission.POST_NOTIFICATIONS",
     ];
 

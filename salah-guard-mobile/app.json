@@ -1,17 +1,19 @@
 {
-  "name": "SalahGuard",
-  "displayName": "Salah Guard",
+  "name": "Smart Salah",
+  "displayName": "Smart Salah",
   "expo": {
-    "name": "Salah Guard",
-    "slug": "salah-guard",
+    "name": "Smart Salah",
+    "slug": "smart-salah",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/logoforsalah.png",
     "splash": {
       "backgroundColor": "#0B0F1A"
     },
-    "plugins": ["./plugins/withDndModule"],
+    "plugins": [
+      "./plugins/withDndModule"
+    ],
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -20,10 +22,10 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/logoforsalah.png",
         "backgroundColor": "#0B0F1A"
       },
-      "package": "com.salahguard",
+      "package": "com.smart.salah",
       "permissions": [
         "ACCESS_NOTIFICATION_POLICY",
         "REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"

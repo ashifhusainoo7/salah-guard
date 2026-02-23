@@ -3,6 +3,7 @@ import { View, Text, Switch, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import type { Prayer } from '../types';
 import { getPrayerColor } from '../utils/prayerUtils';
+import { formatScheduledTime } from '../utils/timeUtils';
 import { t } from '../i18n/strings';
 import useSalahStore from '../store/useSalahStore';
 import { getPrayerGradient } from '../theme';
@@ -16,10 +17,10 @@ interface PrayerCardProps {
 
 const PrayerCard: React.FC<PrayerCardProps> = React.memo(({ prayer, isNext }) => {
   const updatePrayer = useSalahStore((s) => s.updatePrayer);
-
+  debugger
   const handleToggle = useCallback(
     (value: boolean) => {
-      updatePrayer(prayer.id, { isEnabled: value }).catch(() => {});
+      updatePrayer(prayer.id, { isEnabled: value }).catch(() => { });
     },
     [prayer.id, updatePrayer],
   );
@@ -55,7 +56,7 @@ const PrayerCard: React.FC<PrayerCardProps> = React.memo(({ prayer, isNext }) =>
         <View style={styles.detailRow}>
           <View style={styles.timeWrap}>
             <Icon name="clock-outline" size={14} color={colors.text.secondary} />
-            <Text style={styles.time}>{prayer.scheduledTime}</Text>
+            <Text style={styles.time}>{formatScheduledTime(prayer.scheduledTime)}</Text>
           </View>
           <View style={styles.durationWrap}>
             <Icon name="timer-sand" size={13} color={colors.text.muted} />

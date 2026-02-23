@@ -5,11 +5,8 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Platform,
-  Alert,
   RefreshControl,
 } from 'react-native';
-import type { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import type { Prayer } from '../types';
 import useSalahStore from '../store/useSalahStore';
@@ -17,7 +14,8 @@ import DurationSlider from '../components/DurationSlider';
 import OfflineBanner from '../components/OfflineBanner';
 import LoadingView from '../components/LoadingView';
 import EmptyState from '../components/EmptyState';
-import { parseTime, formatTime } from '../utils/timeUtils';
+import TimePickerModal from '../components/TimePickerModal';
+import { formatTime, formatScheduledTime } from '../utils/timeUtils';
 import { getPrayerColor } from '../utils/prayerUtils';
 import { getPrayerGradient } from '../theme';
 import { t } from '../i18n/strings';
@@ -64,19 +62,19 @@ const ScheduleScreen: React.FC = () => {
     setShowTimePicker(true);
   }, []);
 
-  const handleTimeChange = useCallback(
-    (event: DateTimePickerEvent, selectedDate?: Date) => {
-      setShowTimePicker(Platform.OS === 'ios');
-      if (event.type === 'dismissed' || !selectedDate || timePickerPrayerId == null) {
-        setShowTimePicker(false);
-        return;
-      }
+  const handleTimeConfirm = useCallback(
+    (selectedDate: Date) => {
+      if (timePickerPrayerId == null) return;
       const newTime = formatTime(selectedDate.getHours(), selectedDate.getMinutes());
       updatePrayer(timePickerPrayerId, { scheduledTime: newTime }).catch(() => {});
       setShowTimePicker(false);
     },
     [timePickerPrayerId, updatePrayer],
   );
+
+  const handleTimeCancel = useCallback(() => {
+    setShowTimePicker(false);
+  }, []);
 
   const handleDurationChange = useCallback(
     (prayerId: number, value: number) => {
@@ -160,7 +158,7 @@ const ScheduleScreen: React.FC = () => {
                   >
                     <Icon name="clock-outline" size={20} color={prayerColor} />
                     <Text style={[styles.timeText, { color: prayerColor }]}>
-                      {prayer.scheduledTime}
+                      {formatScheduledTime(prayer.scheduledTime)}
                     </Text>
                     <Text style={styles.changeText}>Change</Text>
                   </TouchableOpacity>
@@ -212,28 +210,14 @@ const ScheduleScreen: React.FC = () => {
           );
         })}
       </ScrollView>
-      {showTimePicker && timePickerPrayerId != null && (() => {
-        try {
-          const DateTimePicker = require('@react-native-community/datetimepicker').default;
-          const prayer = prayers.find((p) => p.id === timePickerPrayerId);
-          const { hours, minutes } = parseTime(prayer?.scheduledTime ?? '00:00');
-          const pickerDate = new Date();
-          pickerDate.setHours(hours, minutes, 0, 0);
-          return (
-            <DateTimePicker
-              value={pickerDate}
-              mode="time"
-              is24Hour
-              display="spinner"
-              onChange={handleTimeChange}
-            />
-          );
-        } catch {
-          Alert.alert('Time Picker', 'Time picker is not available. Please rebuild the app.');
-          setShowTimePicker(false);
-          return null;
+      <TimePickerModal
+        visible={showTimePicker && timePickerPrayerId != null}
+        initialTime={
+          prayers.find((p) => p.id === timePickerPrayerId)?.scheduledTime ?? '00:00'
         }
-      })()}
+        onConfirm={handleTimeConfirm}
+        onCancel={handleTimeCancel}
+      />
     </View>
   );
 };

@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import { registerDevice } from '../services/api';
-import { storeTokens, getTokens } from '../utils/secureStorage';
+import { storeTokens, getTokens, clearTokens } from '../utils/secureStorage';
 import { getDeviceId, setDeviceId } from '../utils/storage';
 import logger from '../utils/logger';
 
@@ -24,14 +24,6 @@ export function useAuth(): { isAuthenticated: boolean; isInitializing: boolean }
   useEffect(() => {
     const initialize = async (): Promise<void> => {
       try {
-        // Check if we already have tokens
-        const existingTokens = await getTokens();
-        if (existingTokens?.accessToken) {
-          setIsAuthenticated(true);
-          setIsInitializing(false);
-          return;
-        }
-
         // Get or generate device ID
         let deviceId = getDeviceId();
         if (!deviceId) {
@@ -39,7 +31,17 @@ export function useAuth(): { isAuthenticated: boolean; isInitializing: boolean }
           setDeviceId(deviceId);
         }
 
-        // Register device and store tokens
+        // Check if we already have tokens
+        const existingTokens = await getTokens();
+        if (existingTokens?.accessToken) {
+          // Tokens exist — trust them for now; the API interceptor
+          // will auto-refresh or re-register if they're expired.
+          setIsAuthenticated(true);
+          setIsInitializing(false);
+          return;
+        }
+
+        // No tokens — register device
         const tokens = await registerDevice(deviceId);
         await storeTokens({
           accessToken: tokens.accessToken,
@@ -49,7 +51,9 @@ export function useAuth(): { isAuthenticated: boolean; isInitializing: boolean }
         setIsAuthenticated(true);
       } catch (err) {
         logger.error('Auth initialization failed:', err);
-        // App can still function offline
+        // Clear any stale tokens so next launch retries registration
+        await clearTokens().catch(() => {});
+        // App can still function offline with defaults
         setIsAuthenticated(false);
       } finally {
         setIsInitializing(false);

@@ -1,26 +1,48 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import type { Prayer } from '../types';
-import { getMillisUntilTime, formatCountdown } from '../utils/timeUtils';
+import { getNextOccurrence, formatCountdown, formatScheduledTime } from '../utils/timeUtils';
 import { getPrayerColor } from '../utils/prayerUtils';
 import { t } from '../i18n/strings';
 import { colors, spacing, glassCard } from '../theme';
 
 interface CountdownTimerProps {
   prayer: Prayer;
+  onExpired?: () => void;
 }
 
-const CountdownTimer: React.FC<CountdownTimerProps> = React.memo(({ prayer }) => {
-  const [remaining, setRemaining] = useState<number>(
-    getMillisUntilTime(prayer.scheduledTime),
+const CountdownTimer: React.FC<CountdownTimerProps> = React.memo(({ prayer, onExpired }) => {
+  const [remaining, setRemaining] = useState<number>(() =>
+    Math.max(0, getNextOccurrence(prayer.scheduledTime).getTime() - Date.now()),
   );
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const targetRef = useRef<number>(
+    getNextOccurrence(prayer.scheduledTime).getTime(),
+  );
+  const expiredCalledRef = useRef(false);
 
   useEffect(() => {
-    setRemaining(getMillisUntilTime(prayer.scheduledTime));
+    const target = getNextOccurrence(prayer.scheduledTime);
+    targetRef.current = target.getTime();
+    expiredCalledRef.current = false;
+    setRemaining(Math.max(0, target.getTime() - Date.now()));
 
     intervalRef.current = setInterval(() => {
-      setRemaining(getMillisUntilTime(prayer.scheduledTime));
+      const now = Date.now();
+      const diff = targetRef.current - now;
+
+      if (diff <= 0) {
+        if (!expiredCalledRef.current) {
+          expiredCalledRef.current = true;
+          onExpired?.();
+        }
+        // Advance target to next occurrence (wraps to tomorrow)
+        targetRef.current = getNextOccurrence(prayer.scheduledTime).getTime();
+        expiredCalledRef.current = false;
+        setRemaining(Math.max(0, targetRef.current - now));
+      } else {
+        setRemaining(diff);
+      }
     }, 1000);
 
     return () => {
@@ -28,7 +50,7 @@ const CountdownTimer: React.FC<CountdownTimerProps> = React.memo(({ prayer }) =>
         clearInterval(intervalRef.current);
       }
     };
-  }, [prayer.scheduledTime]);
+  }, [prayer.scheduledTime, onExpired]);
 
   const prayerColor = getPrayerColor(prayer.name);
 
@@ -42,7 +64,7 @@ const CountdownTimer: React.FC<CountdownTimerProps> = React.memo(({ prayer }) =>
         <Text style={[styles.countdown, { color: prayerColor }]}>
           {formatCountdown(remaining)}
         </Text>
-        <Text style={styles.time}>{prayer.scheduledTime}</Text>
+        <Text style={styles.time}>{formatScheduledTime(prayer.scheduledTime)}</Text>
       </View>
     </View>
   );

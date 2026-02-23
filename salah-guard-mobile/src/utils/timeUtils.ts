@@ -23,6 +23,24 @@ export function formatTime(hours: number, minutes: number): string {
 }
 
 /**
+ * Converts hours and minutes to a 12-hour "h:mm AM/PM" formatted string.
+ */
+export function formatTime12(hours: number, minutes: number): string {
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const h12 = hours % 12 || 12;
+  const m = minutes.toString().padStart(2, '0');
+  return `${h12}:${m} ${period}`;
+}
+
+/**
+ * Parses a "HH:mm" string and returns a 12-hour formatted string.
+ */
+export function formatScheduledTime(timeStr: string): string {
+  const { hours, minutes } = parseTime(timeStr);
+  return formatTime12(hours, minutes);
+}
+
+/**
  * Formats a Date object to "HH:mm".
  */
 export function formatDateToTime(date: Date): string {
@@ -83,22 +101,22 @@ export function formatCountdown(millis: number): string {
 }
 
 /**
- * Formats an ISO date string to a localized time string.
+ * Formats an ISO date string to a localized time string (12-hour).
  */
 export function formatIsoToTime(isoString: string): string {
   const date = new Date(isoString);
-  return formatTime(date.getHours(), date.getMinutes());
+  return formatTime12(date.getHours(), date.getMinutes());
 }
 
 /**
- * Formats an ISO date string to a localized date + time string.
+ * Formats an ISO date string to a localized date + time string (12-hour).
  */
 export function formatIsoToDateTime(isoString: string): string {
   const date = new Date(isoString);
   const day = date.getDate().toString().padStart(2, '0');
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
   const year = date.getFullYear();
-  const time = formatTime(date.getHours(), date.getMinutes());
+  const time = formatTime12(date.getHours(), date.getMinutes());
   return `${day}/${month}/${year} ${time}`;
 }
 

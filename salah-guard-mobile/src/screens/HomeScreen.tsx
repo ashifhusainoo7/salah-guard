@@ -1,14 +1,12 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState, useMemo } from 'react';
 import {
   View,
   Text,
-  FlatList,
+  ScrollView,
   StyleSheet,
   RefreshControl,
   InteractionManager,
-  ListRenderItem,
 } from 'react-native';
-import type { Prayer } from '../types';
 import useSalahStore from '../store/useSalahStore';
 import { getNextPrayer } from '../utils/prayerUtils';
 import MasterToggle from '../components/MasterToggle';
@@ -26,39 +24,29 @@ const HomeScreen: React.FC = () => {
   const loadPrayers = useSalahStore((s) => s.loadPrayers);
   const loadSettings = useSalahStore((s) => s.loadSettings);
 
+  const [tick, setTick] = useState(0);
+
   useEffect(() => {
     InteractionManager.runAfterInteractions(() => {
-      loadPrayers().catch(() => {});
-      loadSettings().catch(() => {});
+      loadPrayers().catch(() => { });
+      loadSettings().catch(() => { });
     });
   }, [loadPrayers, loadSettings]);
 
-  const nextPrayer = getNextPrayer(prayers);
+  useEffect(() => {
+    const id = setInterval(() => setTick((prev) => prev + 1), 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const nextPrayer = useMemo(() => getNextPrayer(prayers), [prayers, tick]);
+
+  const handleCountdownExpired = useCallback(() => {
+    setTick((prev) => prev + 1);
+  }, []);
 
   const handleRefresh = useCallback(() => {
-    loadPrayers().catch(() => {});
+    loadPrayers().catch(() => { });
   }, [loadPrayers]);
-
-  const renderItem: ListRenderItem<Prayer> = useCallback(
-    ({ item }) => (
-      <PrayerCard
-        prayer={item}
-        isNext={nextPrayer?.id === item.id}
-      />
-    ),
-    [nextPrayer],
-  );
-
-  const keyExtractor = useCallback((item: Prayer) => item.id.toString(), []);
-
-  const getItemLayout = useCallback(
-    (_data: ArrayLike<Prayer> | null | undefined, index: number) => ({
-      length: 110,
-      offset: 110 * index,
-      index,
-    }),
-    [],
-  );
 
   if (isLoading && prayers.length === 0) {
     return <LoadingView />;
@@ -67,24 +55,9 @@ const HomeScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <OfflineBanner />
-      <FlatList
-        data={prayers}
-        renderItem={renderItem}
-        keyExtractor={keyExtractor}
-        getItemLayout={getItemLayout}
-        windowSize={5}
-        ListHeaderComponent={
-          <>
-            <MasterToggle />
-            {nextPrayer && <CountdownTimer prayer={nextPrayer} />}
-            {prayers.length > 0 && (
-              <Text style={styles.sectionLabel}>{t('schedule')}</Text>
-            )}
-          </>
-        }
-        ListEmptyComponent={
-          <EmptyState icon="mosque" message={t('noPrayersEnabled')} />
-        }
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={isLoading}
@@ -94,9 +67,25 @@ const HomeScreen: React.FC = () => {
             progressBackgroundColor={colors.bg.secondary}
           />
         }
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      />
+      >
+        <MasterToggle />
+        {nextPrayer && (
+          <CountdownTimer prayer={nextPrayer} onExpired={handleCountdownExpired} />
+        )}
+        {prayers.length > 0 && (
+          <Text style={styles.sectionLabel}>{t('schedule')}</Text>
+        )}
+        {prayers.length === 0 && !isLoading && (
+          <EmptyState icon="mosque" message={t('noPrayersEnabled')} />
+        )}
+        {prayers.map((prayer, index) => (
+          <PrayerCard
+            key={`prayer-${index}-${prayer.name}`}
+            prayer={prayer}
+            isNext={nextPrayer?.id === prayer.id}
+          />
+        ))}
+      </ScrollView>
     </View>
   );
 };
@@ -106,7 +95,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.bg.primary,
   },
-  listContent: {
+  scrollContent: {
     paddingBottom: 20,
   },
   sectionLabel: {

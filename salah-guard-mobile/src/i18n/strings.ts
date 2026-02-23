@@ -56,6 +56,7 @@ interface Strings {
   fri: string;
   sat: string;
   sun: string;
+  selectTime: string;
   rootDetected: string;
   rootDetectedMessage: string;
 }
@@ -117,6 +118,7 @@ const en: Strings = {
   fri: 'Fri',
   sat: 'Sat',
   sun: 'Sun',
+  selectTime: 'Select Time',
   rootDetected: 'Security Warning',
   rootDetectedMessage:
     'This device appears to be rooted/jailbroken. Some features may be restricted for security.',
@@ -179,6 +181,7 @@ const ur: Strings = {
   fri: 'جمعہ',
   sat: 'ہفتہ',
   sun: 'اتوار',
+  selectTime: 'وقت منتخب کریں',
   rootDetected: 'سیکیورٹی انتباہ',
   rootDetectedMessage:
     'یہ آلہ روٹ/جیل بروکن معلوم ہوتا ہے۔ سیکیورٹی کی وجہ سے کچھ خصوصیات محدود ہو سکتی ہیں۔',

@@ -18,8 +18,9 @@ import type {
   PrayerUpdatePayload,
   UserSettings,
 } from '../types';
+import { Platform } from 'react-native';
 import { getTokens, storeTokens, clearTokens } from '../utils/secureStorage';
-import { getApiUrl, getDeviceId } from '../utils/storage';
+import { getApiUrl, getDeviceId, setDeviceId } from '../utils/storage';
 import logger from '../utils/logger';
 
 const DEFAULT_TIMEOUT = 10000;
@@ -92,25 +93,55 @@ function createClient(): AxiosInstance {
 
         try {
           const tokens = await getTokens();
-          const deviceId = getDeviceId();
+          let deviceId = getDeviceId();
 
-          if (!tokens?.refreshToken || !deviceId) {
-            await clearTokens();
-            processQueue(new Error('No refresh token'), null);
-            return Promise.reject(error);
+          // Try token refresh first
+          if (tokens?.refreshToken && deviceId) {
+            try {
+              const response = await axios.post<ApiResponse<AuthTokenResponse>>(
+                `${getBaseUrl()}/api/auth/refresh`,
+                {
+                  refreshToken: tokens.refreshToken,
+                  deviceId,
+                },
+                {},
+              );
+
+              if (response.data.success && response.data.data) {
+                const newTokens = response.data.data;
+                await storeTokens({
+                  accessToken: newTokens.accessToken,
+                  refreshToken: newTokens.refreshToken,
+                });
+
+                originalRequest.headers.Authorization = `Bearer ${newTokens.accessToken}`;
+                processQueue(null, newTokens.accessToken);
+                return client(originalRequest);
+              }
+            } catch {
+              // Refresh failed — fall through to re-register
+            }
           }
 
-          const response = await axios.post<ApiResponse<AuthTokenResponse>>(
-            `${getBaseUrl()}/api/auth/refresh`,
-            {
-              refreshToken: tokens.refreshToken,
-              deviceId,
-            },
-            {},
+          // Refresh failed or no tokens — re-register the device
+          await clearTokens();
+          if (!deviceId) {
+            const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+            deviceId = `${Platform.OS}-`;
+            for (let i = 0; i < 16; i++) {
+              deviceId += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            setDeviceId(deviceId);
+          }
+
+          const regResponse = await axios.post<ApiResponse<AuthTokenResponse>>(
+            `${getBaseUrl()}/api/auth/register`,
+            { deviceId },
+            { timeout: DEFAULT_TIMEOUT },
           );
 
-          if (response.data.success && response.data.data) {
-            const newTokens = response.data.data;
+          if (regResponse.data.success && regResponse.data.data) {
+            const newTokens = regResponse.data.data;
             await storeTokens({
               accessToken: newTokens.accessToken,
               refreshToken: newTokens.refreshToken,
@@ -121,12 +152,12 @@ function createClient(): AxiosInstance {
             return client(originalRequest);
           }
 
-          processQueue(new Error('Token refresh failed'), null);
+          processQueue(new Error('Re-registration failed'), null);
           return Promise.reject(error);
-        } catch (refreshError) {
+        } catch (reAuthError) {
           await clearTokens();
-          processQueue(refreshError, null);
-          return Promise.reject(refreshError);
+          processQueue(reAuthError, null);
+          return Promise.reject(reAuthError);
         } finally {
           isRefreshing = false;
         }

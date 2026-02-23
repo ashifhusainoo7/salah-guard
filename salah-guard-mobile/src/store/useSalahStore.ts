@@ -56,15 +56,25 @@ const defaultSettings: UserSettings = {
 const ALL_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 const defaultPrayers: Prayer[] = [
-  { id: 1, name: 'Fajr',    arabicName: 'الفجر',   scheduledTime: '05:30', durationMinutes: 15, isEnabled: true, activeDays: ALL_DAYS },
-  { id: 2, name: 'Dhuhr',   arabicName: 'الظهر',   scheduledTime: '12:30', durationMinutes: 15, isEnabled: true, activeDays: ALL_DAYS },
-  { id: 3, name: 'Asr',     arabicName: 'العصر',   scheduledTime: '15:45', durationMinutes: 15, isEnabled: true, activeDays: ALL_DAYS },
-  { id: 4, name: 'Maghrib', arabicName: 'المغرب',  scheduledTime: '18:15', durationMinutes: 15, isEnabled: true, activeDays: ALL_DAYS },
-  { id: 5, name: 'Isha',    arabicName: 'العشاء',   scheduledTime: '20:00', durationMinutes: 15, isEnabled: true, activeDays: ALL_DAYS },
+  { id: 1, name: 'Fajr', arabicName: 'الفجر', scheduledTime: '05:30', durationMinutes: 15, isEnabled: true, activeDays: ALL_DAYS },
+  { id: 2, name: 'Dhuhr', arabicName: 'الظهر', scheduledTime: '12:30', durationMinutes: 15, isEnabled: true, activeDays: ALL_DAYS },
+  { id: 3, name: 'Asr', arabicName: 'العصر', scheduledTime: '15:45', durationMinutes: 15, isEnabled: true, activeDays: ALL_DAYS },
+  { id: 4, name: 'Maghrib', arabicName: 'المغرب', scheduledTime: '18:15', durationMinutes: 15, isEnabled: true, activeDays: ALL_DAYS },
+  { id: 5, name: 'Isha', arabicName: 'العشاء', scheduledTime: '20:00', durationMinutes: 15, isEnabled: true, activeDays: ALL_DAYS },
 ];
 
+/**
+ * Merges a partial prayers array with defaults so all 5 are always present.
+ */
+function mergePrayers(source: Prayer[]): Prayer[] {
+  return defaultPrayers.map((def) => {
+    const match = source.find((p) => p.name === def.name);
+    return match ?? def;
+  });
+}
+
 const useSalahStore = create<SalahState>((set, get) => ({
-  prayers: [],
+  prayers: defaultPrayers,
   settings: defaultSettings,
   history: [],
   historyPage: 1,
@@ -77,17 +87,18 @@ const useSalahStore = create<SalahState>((set, get) => ({
   loadPrayers: async () => {
     set({ isLoading: true, error: null });
     try {
-      const prayers = await api.fetchPrayers();
+      const apiPrayers = await api.fetchPrayers();
+      const prayers = mergePrayers(apiPrayers);
       setCachedPrayers(prayers);
       set({ prayers, isLoading: false, isOffline: false });
       scheduleAllAlarms(prayers, get().settings.isGloballyActive);
     } catch (err) {
       logger.error('Failed to load prayers from API, using cache:', err);
       const cached = getCachedPrayers();
-      const fallback = cached ?? defaultPrayers;
-      setCachedPrayers(fallback);
-      set({ prayers: fallback, isLoading: false, isOffline: true, error: null });
-      scheduleAllAlarms(fallback, get().settings.isGloballyActive);
+      const prayers = mergePrayers(cached ?? []);
+      setCachedPrayers(prayers);
+      set({ prayers, isLoading: false, isOffline: true, error: null });
+      scheduleAllAlarms(prayers, get().settings.isGloballyActive);
     }
   },
 

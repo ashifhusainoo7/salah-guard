@@ -17,10 +17,8 @@
     "@expo/vector-icons": "^15.0.3",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/datetimepicker": "^8.2.0",
-    "@react-native-community/netinfo": "^11.4.1",
     "@react-navigation/bottom-tabs": "^7.14.0",
     "@react-navigation/native": "^7.1.28",
-    "@sentry/react-native": "^5.33.1",
     "axios": "^1.7.9",
     "expo": "~54.0.0",
     "expo-constants": "^18.0.13",
@@ -30,15 +28,10 @@
     "react-dom": "^19.1.0",
     "react-native": "^0.81.5",
     "react-native-background-actions": "^4.0.1",
-    "react-native-biometrics": "^3.0.1",
-    "react-native-config": "^1.5.3",
     "react-native-gesture-handler": "^2.30.0",
-    "react-native-keychain": "^9.2.0",
-    "react-native-mmkv": "^3.1.0",
     "react-native-reanimated": "^3.16.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
-    "react-native-ssl-pinning": "^1.5.11",
     "react-native-svg": "^15.9.0",
     "react-native-vector-icons": "^10.2.0",
     "react-native-web": "^0.21.2",
@@ -81,7 +74,7 @@
       "./jest.setup.ts"
     ],
     "transformIgnorePatterns": [
-      "node_modules/(?!(react-native|@react-native|@react-navigation|react-native-reanimated|react-native-vector-icons|react-native-screens|react-native-safe-area-context|react-native-mmkv|nativewind|react-native-config|react-native-biometrics|react-native-keychain|react-native-jail-monkey|react-native-background-actions|@react-native-community|react-native-svg|react-native-ssl-pinning|@sentry)/)"
+      "node_modules/(?!(react-native|@react-native|@react-navigation|react-native-reanimated|react-native-vector-icons|react-native-screens|react-native-safe-area-context|nativewind|react-native-background-actions|@react-native-community|react-native-svg)/)"
     ],
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/src/$1"

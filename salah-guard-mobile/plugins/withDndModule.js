@@ -334,15 +334,18 @@ function withDndAndroidManifest(config) {
         application.service = [];
       }
 
+      // Declare the react-native-background-actions service with foregroundServiceType
+      // so Android 14+ allows starting it as a foreground service.
+      const bgActionsServiceName = "com.asterinet.react.bgactions.RNBackgroundActionsTask";
       const hasFgService = application.service.some(
         (s) =>
-          s.$?.["android:name"] === "com.salahguard.DndForegroundService"
+          s.$?.["android:name"] === bgActionsServiceName
       );
 
       if (!hasFgService) {
         application.service.push({
           $: {
-            "android:name": "com.salahguard.DndForegroundService",
+            "android:name": bgActionsServiceName,
             "android:foregroundServiceType": "specialUse",
             "android:exported": "false",
           },

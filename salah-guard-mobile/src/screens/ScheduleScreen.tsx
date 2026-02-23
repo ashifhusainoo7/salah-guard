@@ -97,7 +97,6 @@ const ScheduleScreen: React.FC = () => {
 
   const handleSave = useCallback(() => {
     setEditingPrayerId(null);
-    Alert.alert(t('save'), 'Schedule saved successfully.');
   }, []);
 
   if (isLoading && prayers.length === 0) {

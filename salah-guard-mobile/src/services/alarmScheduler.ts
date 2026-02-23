@@ -25,6 +25,11 @@ const BACKGROUND_TASK_OPTIONS = {
  */
 function getBackgroundService(): typeof import('react-native-background-actions').default | null {
   try {
+    const { NativeModules } = require('react-native');
+    if (!NativeModules.RNBackgroundActions) {
+      logger.warn('RNBackgroundActions native module not linked — rebuild the app with: npx expo run:android');
+      return null;
+    }
     return require('react-native-background-actions').default;
   } catch (err) {
     logger.warn('react-native-background-actions not available:', err);
@@ -78,6 +83,14 @@ async function dndTaskLoop(): Promise<void> {
       }
 
       if (!BackgroundService.isRunning()) break;
+
+      // Re-validate after sleep: the day may have changed (e.g. slept from Mon night to Tue morning)
+      const freshWindows = getMergedDndWindows(cachedPrayers);
+      const stillValid = freshWindows.some((w) => w.startTime === nextWindow.startTime);
+      if (!stillValid) {
+        logger.info('DND: window no longer valid after sleep (day changed or prayer disabled), skipping');
+        continue;
+      }
 
       // Enable DND
       const startTime = new Date().toISOString();

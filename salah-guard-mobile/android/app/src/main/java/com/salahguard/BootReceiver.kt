@@ -5,13 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 
-/**
- * BroadcastReceiver that triggers alarm rescheduling after device reboot.
- * Registered in AndroidManifest.xml for BOOT_COMPLETED action.
- *
- * On reboot, this sends a headless JS task to the React Native runtime
- * to reschedule all prayer DND alarms.
- */
 class BootReceiver : BroadcastReceiver() {
 
     companion object {
@@ -24,8 +17,6 @@ class BootReceiver : BroadcastReceiver() {
             Log.i(TAG, "Device rebooted - scheduling alarm reschedule")
 
             try {
-                // Launch the main activity which will trigger alarm rescheduling
-                // on the React Native side via useEffect in App.tsx
                 val launchIntent = context.packageManager
                     .getLaunchIntentForPackage(context.packageName)
 

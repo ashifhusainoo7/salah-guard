@@ -39,7 +39,7 @@ export function getMillisUntilTime(timeStr: string): number {
   const target = new Date();
   target.setHours(hours, minutes, 0, 0);
 
-  if (target.getTime() <= now.getTime()) {
+  if (target.getTime() < now.getTime()) {
     target.setDate(target.getDate() + 1);
   }
 
@@ -55,7 +55,7 @@ export function getNextOccurrence(timeStr: string): Date {
   const target = new Date();
   target.setHours(hours, minutes, 0, 0);
 
-  if (target.getTime() <= now.getTime()) {
+  if (target.getTime() < now.getTime()) {
     target.setDate(target.getDate() + 1);
   }
 

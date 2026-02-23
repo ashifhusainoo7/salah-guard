@@ -9,10 +9,6 @@ import android.os.PowerManager
 import android.provider.Settings
 import com.facebook.react.bridge.*
 
-/**
- * Native module providing Do Not Disturb control capabilities.
- * Validates all inputs and handles all exceptions to prevent native crashes.
- */
 class DndModule(reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext) {
 
@@ -23,9 +19,6 @@ class DndModule(reactContext: ReactApplicationContext) :
                 as NotificationManager
     }
 
-    /**
-     * Enables Do Not Disturb mode (INTERRUPTION_FILTER_NONE = total silence).
-     */
     @ReactMethod
     fun enableDnd(promise: Promise) {
         try {
@@ -41,9 +34,6 @@ class DndModule(reactContext: ReactApplicationContext) :
         }
     }
 
-    /**
-     * Disables Do Not Disturb mode (restores all notifications).
-     */
     @ReactMethod
     fun disableDnd(promise: Promise) {
         try {
@@ -59,9 +49,6 @@ class DndModule(reactContext: ReactApplicationContext) :
         }
     }
 
-    /**
-     * Checks if DND is currently enabled.
-     */
     @ReactMethod
     fun isDndEnabled(promise: Promise) {
         try {
@@ -75,9 +62,6 @@ class DndModule(reactContext: ReactApplicationContext) :
         }
     }
 
-    /**
-     * Checks if the app has Notification Policy Access (DND permission).
-     */
     @ReactMethod
     fun hasDndPermission(promise: Promise) {
         try {
@@ -88,9 +72,6 @@ class DndModule(reactContext: ReactApplicationContext) :
         }
     }
 
-    /**
-     * Opens system settings for Notification Policy Access.
-     */
     @ReactMethod
     fun requestDndPermission(promise: Promise) {
         try {
@@ -103,9 +84,6 @@ class DndModule(reactContext: ReactApplicationContext) :
         }
     }
 
-    /**
-     * Requests exclusion from battery optimization to ensure reliable background execution.
-     */
     @ReactMethod
     fun requestBatteryOptimizationExclusion(promise: Promise) {
         try {

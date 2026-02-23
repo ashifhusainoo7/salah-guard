@@ -9,7 +9,7 @@ import {
   Alert,
   RefreshControl,
 } from 'react-native';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import type { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import type { Prayer } from '../types';
 import useSalahStore from '../store/useSalahStore';
@@ -214,19 +214,26 @@ const ScheduleScreen: React.FC = () => {
         })}
       </ScrollView>
       {showTimePicker && timePickerPrayerId != null && (() => {
-        const prayer = prayers.find((p) => p.id === timePickerPrayerId);
-        const { hours, minutes } = parseTime(prayer?.scheduledTime ?? '00:00');
-        const pickerDate = new Date();
-        pickerDate.setHours(hours, minutes, 0, 0);
-        return (
-          <DateTimePicker
-            value={pickerDate}
-            mode="time"
-            is24Hour
-            display="spinner"
-            onChange={handleTimeChange}
-          />
-        );
+        try {
+          const DateTimePicker = require('@react-native-community/datetimepicker').default;
+          const prayer = prayers.find((p) => p.id === timePickerPrayerId);
+          const { hours, minutes } = parseTime(prayer?.scheduledTime ?? '00:00');
+          const pickerDate = new Date();
+          pickerDate.setHours(hours, minutes, 0, 0);
+          return (
+            <DateTimePicker
+              value={pickerDate}
+              mode="time"
+              is24Hour
+              display="spinner"
+              onChange={handleTimeChange}
+            />
+          );
+        } catch {
+          Alert.alert('Time Picker', 'Time picker is not available. Please rebuild the app.');
+          setShowTimePicker(false);
+          return null;
+        }
       })()}
     </View>
   );

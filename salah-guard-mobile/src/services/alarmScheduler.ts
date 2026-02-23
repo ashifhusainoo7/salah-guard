@@ -2,7 +2,6 @@
  * Alarm scheduling service using react-native-background-actions.
  * Runs a persistent background task that enables/disables DND at prayer times.
  */
-import BackgroundService from 'react-native-background-actions';
 import type { Prayer } from '../types';
 import { getMergedDndWindows } from '../utils/prayerUtils';
 import { getMillisUntilTime } from '../utils/timeUtils';
@@ -20,6 +19,19 @@ const BACKGROUND_TASK_OPTIONS = {
   parameters: { delay: 1000 },
 };
 
+/**
+ * Lazily require react-native-background-actions to avoid crash
+ * if the native module isn't linked in the current build.
+ */
+function getBackgroundService(): typeof import('react-native-background-actions').default | null {
+  try {
+    return require('react-native-background-actions').default;
+  } catch (err) {
+    logger.warn('react-native-background-actions not available:', err);
+    return null;
+  }
+}
+
 let cachedPrayers: Prayer[] = [];
 let cachedIsGloballyActive = false;
 
@@ -28,6 +40,9 @@ let cachedIsGloballyActive = false;
  * Runs continuously, sleeping until the next prayer window.
  */
 async function dndTaskLoop(): Promise<void> {
+  const BackgroundService = getBackgroundService();
+  if (!BackgroundService) return;
+
   // eslint-disable-next-line no-constant-condition
   while (BackgroundService.isRunning()) {
     try {
@@ -124,6 +139,8 @@ export function initializeNotificationChannel(): void {
  * Cancels all scheduled alarms by stopping the background service.
  */
 export async function cancelAllScheduledAlarms(): Promise<void> {
+  const BackgroundService = getBackgroundService();
+  if (!BackgroundService) return;
   try {
     if (BackgroundService.isRunning()) {
       await BackgroundService.stop();
@@ -153,6 +170,12 @@ export async function scheduleAllAlarms(
   const enabledPrayers = prayers.filter((p) => p.isEnabled);
   if (enabledPrayers.length === 0) {
     logger.info('DND: no enabled prayers — not scheduling');
+    return;
+  }
+
+  const BackgroundService = getBackgroundService();
+  if (!BackgroundService) {
+    logger.warn('DND: background service not available — native module not linked');
     return;
   }
 

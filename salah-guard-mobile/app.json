@@ -1,9 +1,9 @@
 {
-  "name": "Smart Salah",
+  "name": "SalahGuard",
   "displayName": "Smart Salah",
   "expo": {
     "name": "Smart Salah",
-    "slug": "smart-salah",
+    "slug": "salah-guard",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
@@ -25,7 +25,7 @@
         "foregroundImage": "./assets/logoforsalah.png",
         "backgroundColor": "#0B0F1A"
       },
-      "package": "com.smart.salah",
+      "package": "com.salahguard",
       "permissions": [
         "ACCESS_NOTIFICATION_POLICY",
         "REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"

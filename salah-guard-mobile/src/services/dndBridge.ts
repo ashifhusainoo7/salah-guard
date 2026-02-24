@@ -6,6 +6,7 @@
 import { NativeModules, Platform, Linking } from 'react-native';
 import * as IntentLauncher from 'expo-intent-launcher';
 import logger from '../utils/logger';
+import { hasNotificationPermission } from './iosNotifications';
 
 interface DndModuleInterface {
   enableDnd: () => Promise<boolean>;
@@ -24,7 +25,6 @@ const nativeDnd = DndModule as DndModuleInterface | undefined;
  */
 export async function enableDnd(): Promise<boolean> {
   if (Platform.OS !== 'android') {
-    logger.warn('DND module not available on this platform');
     return false;
   }
 
@@ -91,6 +91,9 @@ export async function isDndEnabled(): Promise<boolean> {
  * In Expo Go, always returns false since we can't check.
  */
 export async function hasDndPermission(): Promise<boolean> {
+  if (Platform.OS === 'ios') {
+    return hasNotificationPermission();
+  }
   if (Platform.OS !== 'android') {
     return false;
   }
@@ -113,8 +116,11 @@ export async function hasDndPermission(): Promise<boolean> {
  * Works in both Expo Go (via IntentLauncher) and bare builds (via NativeModule).
  */
 export async function requestDndPermission(): Promise<void> {
+  if (Platform.OS === 'ios') {
+    Linking.openURL('app-settings:').catch(() => {});
+    return;
+  }
   if (Platform.OS !== 'android') {
-    logger.warn('DND permission request not available on this platform');
     return;
   }
 
@@ -177,3 +183,4 @@ export async function requestBatteryOptimizationExclusion(): Promise<void> {
     }
   }
 }
+

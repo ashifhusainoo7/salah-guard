@@ -1,57 +1,38 @@
 /**
- * iOS Focus Mode helper screen.
- * Since iOS does not allow programmatic DND control,
- * this screen walks users through setting up Focus/DND shortcuts manually.
+ * iOS DND Reminders helper screen.
+ * Explains the notification-based approach and lets users enable notifications.
  */
-import React, { useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, Linking, Platform } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
+import { requestNotificationPermission, hasNotificationPermission } from '../services/iosNotifications';
 import { colors, spacing, radius, glassCard } from '../theme';
 
-const IosFocusHelper: React.FC = () => {
-  const openFocusSettings = useCallback(() => {
-    if (Platform.OS === 'ios') {
-      Linking.openURL('app-settings:').catch(() => {});
-    }
-  }, []);
+interface IosFocusHelperProps {
+  onPermissionGranted?: () => void;
+}
 
-  const steps = [
-    {
-      icon: 'cog',
-      title: 'Step 1: Open Settings',
-      description: 'Go to Settings > Focus on your iPhone.',
-    },
-    {
-      icon: 'plus-circle',
-      title: 'Step 2: Create a Focus',
-      description:
-        'Tap the "+" button and select "Custom" to create a new Focus mode called "Salah".',
-    },
-    {
-      icon: 'bell-off',
-      title: 'Step 3: Configure Silence',
-      description:
-        'Choose "Silence Notifications From" and select "All Apps" to silence everything during prayer.',
-    },
-    {
-      icon: 'clock-outline',
-      title: 'Step 4: Set Schedule',
-      description:
-        'Under "Turn On Automatically", add a time-based schedule for each prayer time. Set the start time and end time matching your prayer schedule.',
-    },
-    {
-      icon: 'repeat',
-      title: 'Step 5: Repeat for Each Prayer',
-      description:
-        'Add 5 time-based automations, one for each prayer: Fajr, Dhuhr, Asr, Maghrib, and Isha.',
-    },
-    {
-      icon: 'check-circle',
-      title: 'Done!',
-      description:
-        'Your iPhone will now automatically enter Focus mode during prayer times. You can use the Salah Guard app to track your DND sessions.',
-    },
-  ];
+const IosFocusHelper: React.FC<IosFocusHelperProps> = ({ onPermissionGranted }) => {
+  const [permissionGranted, setPermissionGranted] = useState(false);
+
+  const handleEnableNotifications = useCallback(async () => {
+    const granted = await requestNotificationPermission();
+    setPermissionGranted(granted);
+    if (granted && onPermissionGranted) {
+      onPermissionGranted();
+    }
+  }, [onPermissionGranted]);
+
+  // Check current status on mount
+  React.useEffect(() => {
+    hasNotificationPermission().then(setPermissionGranted);
+  }, []);
 
   return (
     <ScrollView
@@ -60,36 +41,60 @@ const IosFocusHelper: React.FC = () => {
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.header}>
-        <Icon name="apple" size={40} color={colors.text.primary} />
-        <Text style={styles.title}>iOS Focus Mode Setup</Text>
+        <View style={styles.iconCircle}>
+          <Icon name="moon-waning-crescent" size={36} color={colors.accent.emerald} />
+        </View>
+        <Text style={styles.title}>DND Reminders</Text>
         <Text style={styles.subtitle}>
-          iOS does not allow apps to control Do Not Disturb directly. Follow
-          these steps to set up automatic Focus mode for prayer times.
+          We'll send you a notification at each prayer time. Just swipe down
+          Control Center and tap the DND icon.
         </Text>
       </View>
 
-      {steps.map((step, index) => (
-        <View key={index} style={styles.stepCard}>
-          <View style={styles.stepIcon}>
-            <Icon name={step.icon as any} size={22} color={colors.accent.emerald} />
-          </View>
-          <View style={styles.stepContent}>
-            <Text style={styles.stepTitle}>{step.title}</Text>
-            <Text style={styles.stepDescription}>{step.description}</Text>
-          </View>
+      <View style={styles.stepCard}>
+        <View style={styles.stepNumber}>
+          <Text style={styles.stepNumberText}>1</Text>
         </View>
-      ))}
-
-      {Platform.OS === 'ios' && (
-        <View style={styles.buttonContainer}>
-          <Text
-            style={styles.openSettingsButton}
-            onPress={openFocusSettings}
-          >
-            Open Settings
+        <View style={styles.stepContent}>
+          <Text style={styles.stepTitle}>Notification arrives</Text>
+          <Text style={styles.stepDescription}>
+            You'll get a reminder when each prayer starts and ends.
           </Text>
         </View>
+      </View>
+
+      <View style={styles.stepCard}>
+        <View style={styles.stepNumber}>
+          <Text style={styles.stepNumberText}>2</Text>
+        </View>
+        <View style={styles.stepContent}>
+          <Text style={styles.stepTitle}>Toggle DND</Text>
+          <Text style={styles.stepDescription}>
+            Swipe down from the top-right corner to open Control Center,
+            then tap the moon icon to turn DND on or off.
+          </Text>
+        </View>
+      </View>
+
+      {!permissionGranted ? (
+        <TouchableOpacity
+          style={styles.enableButton}
+          onPress={handleEnableNotifications}
+          activeOpacity={0.8}
+        >
+          <Icon name="bell-ring-outline" size={20} color="#FFFFFF" />
+          <Text style={styles.enableButtonText}>Enable Notifications</Text>
+        </TouchableOpacity>
+      ) : (
+        <View style={styles.enabledBanner}>
+          <Icon name="check-circle" size={20} color={colors.accent.emerald} />
+          <Text style={styles.enabledText}>Notifications enabled — you're all set!</Text>
+        </View>
       )}
+
+      <Text style={styles.hint}>
+        Notifications are scheduled with the system and will fire even if the app is closed.
+      </Text>
     </ScrollView>
   );
 };
@@ -105,8 +110,16 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: spacing.xxl,
+    marginBottom: spacing.xl,
     padding: spacing.lg,
+  },
+  iconCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: colors.accent.emeraldDim,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   title: {
     fontSize: 22,
@@ -115,26 +128,32 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 15,
     color: colors.text.secondary,
     textAlign: 'center',
     marginTop: spacing.sm,
-    lineHeight: 20,
+    lineHeight: 22,
   },
   stepCard: {
     ...glassCard,
     flexDirection: 'row',
     padding: spacing.lg,
     marginBottom: spacing.md,
+    alignItems: 'center',
   },
-  stepIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.accent.emeraldDim,
+  stepNumber: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.accent.emerald,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
+  },
+  stepNumberText: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#FFFFFF',
   },
   stepContent: {
     flex: 1,
@@ -150,20 +169,40 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     lineHeight: 19,
   },
-  buttonContainer: {
-    marginTop: spacing.lg,
+  enableButton: {
+    flexDirection: 'row',
     alignItems: 'center',
-  },
-  openSettingsButton: {
+    justifyContent: 'center',
     backgroundColor: colors.accent.emerald,
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
     paddingHorizontal: 32,
-    paddingVertical: 14,
+    paddingVertical: 16,
     borderRadius: radius.pill,
-    overflow: 'hidden',
+    marginTop: spacing.xl,
+    gap: 10,
+  },
+  enableButtonText: {
+    color: '#FFFFFF',
+    fontSize: 17,
+    fontWeight: '700',
+  },
+  enabledBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: spacing.xl,
+    gap: 8,
+  },
+  enabledText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.accent.emerald,
+  },
+  hint: {
+    fontSize: 13,
+    color: colors.text.muted,
     textAlign: 'center',
+    marginTop: spacing.lg,
+    lineHeight: 18,
   },
 });
 

@@ -8,6 +8,8 @@ import {
   StyleSheet,
   Linking,
   AppState,
+  Platform,
+  Modal,
 } from 'react-native';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import useSalahStore from '../store/useSalahStore';
@@ -16,6 +18,11 @@ import {
   requestBatteryOptimizationExclusion,
   hasDndPermission,
 } from '../services/dndBridge';
+import {
+  hasNotificationPermission,
+  requestNotificationPermission,
+} from '../services/iosNotifications';
+import IosFocusHelper from '../screens/IosFocusHelper';
 import OfflineBanner from '../components/OfflineBanner';
 import { t } from '../i18n/strings';
 import { colors, spacing, radius, glassCard } from '../theme';
@@ -26,13 +33,28 @@ const SettingsScreen: React.FC = () => {
   const settings = useSalahStore((s) => s.settings);
   const updateSettings = useSalahStore((s) => s.updateSettings);
   const [hasDnd, setHasDnd] = useState<boolean | null>(null);
+  const [showFocusGuide, setShowFocusGuide] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const appState = useRef(AppState.currentState);
+  const isIos = Platform.OS === 'ios';
 
   const checkDndStatus = useCallback(() => {
-    hasDndPermission()
-      .then(setHasDnd)
-      .catch(() => setHasDnd(false));
-  }, []);
+    if (isIos) {
+      hasNotificationPermission()
+        .then((result) => {
+          setNotificationsEnabled(result);
+          setHasDnd(result);
+        })
+        .catch(() => {
+          setNotificationsEnabled(false);
+          setHasDnd(false);
+        });
+    } else {
+      hasDndPermission()
+        .then((result) => setHasDnd(result))
+        .catch(() => setHasDnd(false));
+    }
+  }, [isIos]);
 
   const handleToggle = useCallback(
     (key: keyof typeof settings, value: boolean) => {
@@ -48,6 +70,19 @@ const SettingsScreen: React.FC = () => {
   const handleBatteryOptimization = useCallback(async () => {
     await requestBatteryOptimizationExclusion();
   }, []);
+
+  const handleIosDndRow = useCallback(async () => {
+    if (!notificationsEnabled) {
+      const granted = await requestNotificationPermission();
+      setNotificationsEnabled(granted);
+      setHasDnd(granted);
+      if (granted) {
+        setShowFocusGuide(true);
+      }
+    } else {
+      setShowFocusGuide(true);
+    }
+  }, [notificationsEnabled]);
 
   const handlePrivacyPolicy = useCallback(() => {
     Linking.openURL('https://salahguard.app/privacy').catch(() => {});
@@ -96,53 +131,84 @@ const SettingsScreen: React.FC = () => {
         {/* Permissions */}
         <Text style={styles.sectionTitle}>Permissions</Text>
         <View style={styles.section}>
-          <TouchableOpacity
-            style={styles.actionRow}
-            onPress={handleRequestDndPermission}
-            activeOpacity={0.7}
-          >
-            <Icon name="do-not-disturb" size={20} color={colors.accent.emerald} />
-            <View style={styles.actionContent}>
-              <Text style={styles.actionLabel}>
-                {t('requestDndPermission')}
-              </Text>
-              <View style={[
-                styles.statusPill,
-                { backgroundColor: hasDnd ? colors.status.successBg : colors.bg.cardHover },
-              ]}>
-                <Text
-                  style={[
-                    styles.statusLabel,
-                    { color: hasDnd ? colors.status.success : colors.text.muted },
-                  ]}
-                >
-                  {hasDnd ? 'Granted' : 'Tap to configure'}
+          {isIos ? (
+            <TouchableOpacity
+              style={styles.actionRow}
+              onPress={handleIosDndRow}
+              activeOpacity={0.7}
+            >
+              <Icon name="moon-waning-crescent" size={20} color={colors.accent.emerald} />
+              <View style={styles.actionContent}>
+                <Text style={styles.actionLabel}>
+                  {t('iosFocusSetup')}
                 </Text>
+                <View style={[
+                  styles.statusPill,
+                  { backgroundColor: notificationsEnabled ? colors.status.successBg : colors.bg.cardHover },
+                ]}>
+                  <Text
+                    style={[
+                      styles.statusLabel,
+                      { color: notificationsEnabled ? colors.status.success : colors.status.warning },
+                    ]}
+                  >
+                    {notificationsEnabled ? t('iosFocusConfigured') : t('iosFocusSetupRequired')}
+                  </Text>
+                </View>
               </View>
-            </View>
-            <Icon name="chevron-right" size={20} color={colors.text.muted} />
-          </TouchableOpacity>
+              <Icon name="chevron-right" size={20} color={colors.text.muted} />
+            </TouchableOpacity>
+          ) : (
+            <>
+              <TouchableOpacity
+                style={styles.actionRow}
+                onPress={handleRequestDndPermission}
+                activeOpacity={0.7}
+              >
+                <Icon name="do-not-disturb" size={20} color={colors.accent.emerald} />
+                <View style={styles.actionContent}>
+                  <Text style={styles.actionLabel}>
+                    {t('requestDndPermission')}
+                  </Text>
+                  <View style={[
+                    styles.statusPill,
+                    { backgroundColor: hasDnd ? colors.status.successBg : colors.bg.cardHover },
+                  ]}>
+                    <Text
+                      style={[
+                        styles.statusLabel,
+                        { color: hasDnd ? colors.status.success : colors.text.muted },
+                      ]}
+                    >
+                      {hasDnd ? 'Granted' : 'Tap to configure'}
+                    </Text>
+                  </View>
+                </View>
+                <Icon name="chevron-right" size={20} color={colors.text.muted} />
+              </TouchableOpacity>
 
-          <View style={styles.divider} />
+              <View style={styles.divider} />
 
-          <TouchableOpacity
-            style={styles.actionRow}
-            onPress={handleBatteryOptimization}
-            activeOpacity={0.7}
-          >
-            <Icon name="battery-heart-outline" size={20} color={colors.accent.emerald} />
-            <View style={styles.actionContent}>
-              <Text style={styles.actionLabel}>
-                {t('excludeBatteryOptimization')}
-              </Text>
-              <View style={[styles.statusPill, { backgroundColor: colors.bg.cardHover }]}>
-                <Text style={[styles.statusLabel, { color: colors.text.muted }]}>
-                  Tap to configure
-                </Text>
-              </View>
-            </View>
-            <Icon name="chevron-right" size={20} color={colors.text.muted} />
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.actionRow}
+                onPress={handleBatteryOptimization}
+                activeOpacity={0.7}
+              >
+                <Icon name="battery-heart-outline" size={20} color={colors.accent.emerald} />
+                <View style={styles.actionContent}>
+                  <Text style={styles.actionLabel}>
+                    {t('excludeBatteryOptimization')}
+                  </Text>
+                  <View style={[styles.statusPill, { backgroundColor: colors.bg.cardHover }]}>
+                    <Text style={[styles.statusLabel, { color: colors.text.muted }]}>
+                      Tap to configure
+                    </Text>
+                  </View>
+                </View>
+                <Icon name="chevron-right" size={20} color={colors.text.muted} />
+              </TouchableOpacity>
+            </>
+          )}
         </View>
 
         {/* App Info */}
@@ -165,6 +231,27 @@ const SettingsScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {isIos && (
+        <Modal
+          visible={showFocusGuide}
+          animationType="slide"
+          presentationStyle="pageSheet"
+          onRequestClose={() => setShowFocusGuide(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <TouchableOpacity onPress={() => setShowFocusGuide(false)} activeOpacity={0.7}>
+                <Icon name="close" size={24} color={colors.text.primary} />
+              </TouchableOpacity>
+            </View>
+            <IosFocusHelper onPermissionGranted={() => {
+              setNotificationsEnabled(true);
+              setHasDnd(true);
+            }} />
+          </View>
+        </Modal>
+      )}
     </View>
   );
 };
@@ -277,6 +364,15 @@ const styles = StyleSheet.create({
   infoValue: {
     fontSize: 14,
     color: colors.text.muted,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: colors.bg.primary,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    padding: spacing.lg,
   },
 });
 

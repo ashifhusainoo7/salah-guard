@@ -2,11 +2,13 @@
  * Alarm scheduling service using react-native-background-actions.
  * Runs a persistent background task that enables/disables DND at prayer times.
  */
+import { Platform } from 'react-native';
 import type { Prayer } from '../types';
 import { getMergedDndWindows } from '../utils/prayerUtils';
 import { getMillisUntilTime } from '../utils/timeUtils';
 import { enableDnd, disableDnd } from './dndBridge';
 import { logDndSession } from './api';
+import { scheduleIosPrayerNotifications, cancelAllIosNotifications } from './iosNotifications';
 import logger from '../utils/logger';
 
 const BACKGROUND_TASK_OPTIONS = {
@@ -152,6 +154,11 @@ export function initializeNotificationChannel(): void {
  * Cancels all scheduled alarms by stopping the background service.
  */
 export async function cancelAllScheduledAlarms(): Promise<void> {
+  if (Platform.OS === 'ios') {
+    await cancelAllIosNotifications();
+    return;
+  }
+
   const BackgroundService = getBackgroundService();
   if (!BackgroundService) return;
   try {
@@ -183,6 +190,12 @@ export async function scheduleAllAlarms(
   const enabledPrayers = prayers.filter((p) => p.isEnabled);
   if (enabledPrayers.length === 0) {
     logger.info('DND: no enabled prayers — not scheduling');
+    return;
+  }
+
+  // iOS: use local notifications instead of background service
+  if (Platform.OS === 'ios') {
+    await scheduleIosPrayerNotifications(prayers);
     return;
   }
 

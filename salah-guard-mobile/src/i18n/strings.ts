@@ -61,6 +61,9 @@ interface Strings {
   selectTime: string;
   rootDetected: string;
   rootDetectedMessage: string;
+  iosFocusSetup: string;
+  iosFocusConfigured: string;
+  iosFocusSetupRequired: string;
 }
 
 const en: Strings = {
@@ -126,6 +129,9 @@ const en: Strings = {
   rootDetected: 'Security Warning',
   rootDetectedMessage:
     'This device appears to be rooted/jailbroken. Some features may be restricted for security.',
+  iosFocusSetup: 'DND Reminders',
+  iosFocusConfigured: 'Enabled',
+  iosFocusSetupRequired: 'Tap to enable',
 };
 
 const ur: Strings = {
@@ -191,6 +197,9 @@ const ur: Strings = {
   rootDetected: 'سیکیورٹی انتباہ',
   rootDetectedMessage:
     'یہ آلہ روٹ/جیل بروکن معلوم ہوتا ہے۔ سیکیورٹی کی وجہ سے کچھ خصوصیات محدود ہو سکتی ہیں۔',
+  iosFocusSetup: 'ڈی این ڈی یاد دہانی',
+  iosFocusConfigured: 'فعال',
+  iosFocusSetupRequired: 'فعال کرنے کے لیے ٹیپ کریں',
 };
 
 const translations: Record<SupportedLanguage, Strings> = { en, ur };

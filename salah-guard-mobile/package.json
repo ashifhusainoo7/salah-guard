@@ -23,6 +23,7 @@
     "expo": "~54.0.0",
     "expo-constants": "^18.0.13",
     "expo-intent-launcher": "~13.0.8",
+    "expo-notifications": "~0.32.16",
     "nativewind": "^4.1.23",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

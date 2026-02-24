@@ -12,7 +12,15 @@
       "backgroundColor": "#0B0F1A"
     },
     "plugins": [
-      "./plugins/withDndModule"
+      "./plugins/withDndModule",
+      [
+        "expo-notifications",
+        {
+          "ios": {
+            "mode": "default"
+          }
+        }
+      ]
     ],
     "assetBundlePatterns": [
       "**/*"

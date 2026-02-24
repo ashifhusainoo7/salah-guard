@@ -15,6 +15,8 @@ interface Strings {
   asr: string;
   maghrib: string;
   isha: string;
+  jumuah: string;
+  jumuahSection: string;
   duration: string;
   minutes: string;
   enabled: string;
@@ -76,6 +78,8 @@ const en: Strings = {
   asr: 'Asr',
   maghrib: 'Maghrib',
   isha: 'Isha',
+  jumuah: "Jumu'ah",
+  jumuahSection: 'Friday Congregational',
   duration: 'Duration',
   minutes: 'min',
   enabled: 'Enabled',
@@ -139,6 +143,8 @@ const ur: Strings = {
   asr: 'عصر',
   maghrib: 'مغرب',
   isha: 'عشاء',
+  jumuah: 'جمعہ',
+  jumuahSection: 'جمعہ کی نماز',
   duration: 'مدت',
   minutes: 'منٹ',
   enabled: 'فعال',

@@ -7,8 +7,9 @@ import {
   RefreshControl,
   InteractionManager,
 } from 'react-native';
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import useSalahStore from '../store/useSalahStore';
-import { getNextPrayer } from '../utils/prayerUtils';
+import { getNextPrayer, isWeeklyPrayer } from '../utils/prayerUtils';
 import MasterToggle from '../components/MasterToggle';
 import CountdownTimer from '../components/CountdownTimer';
 import PrayerCard from '../components/PrayerCard';
@@ -78,9 +79,23 @@ const HomeScreen: React.FC = () => {
         {prayers.length === 0 && !isLoading && (
           <EmptyState icon="mosque" message={t('noPrayersEnabled')} />
         )}
-        {prayers.map((prayer, index) => (
+        {prayers.filter((p) => !isWeeklyPrayer(p.name)).map((prayer, index) => (
           <PrayerCard
             key={`prayer-${index}-${prayer.name}`}
+            prayer={prayer}
+            isNext={nextPrayer?.id === prayer.id}
+          />
+        ))}
+
+        {prayers.filter((p) => isWeeklyPrayer(p.name)).length > 0 && (
+          <View style={styles.jumuahLabelRow}>
+            <Icon name="mosque" size={16} color={colors.accent.emerald} />
+            <Text style={styles.jumuahLabel}>{t('jumuahSection')}</Text>
+          </View>
+        )}
+        {prayers.filter((p) => isWeeklyPrayer(p.name)).map((prayer, index) => (
+          <PrayerCard
+            key={`weekly-${index}-${prayer.name}`}
             prayer={prayer}
             isNext={nextPrayer?.id === prayer.id}
           />
@@ -107,6 +122,21 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.lg,
     marginTop: spacing.xl,
     marginBottom: spacing.sm,
+  },
+  jumuahLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.xl,
+    marginBottom: spacing.sm,
+  },
+  jumuahLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.accent.emerald,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
   },
 });
 

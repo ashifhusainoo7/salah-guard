@@ -127,6 +127,14 @@ export function getPrayerColor(prayerName: string): string {
     Asr: '#F97316',
     Maghrib: '#F43F5E',
     Isha: '#8B5CF6',
+    Jumuah: '#10B981',
   };
   return colorMap[prayerName] ?? '#10B981';
+}
+
+/**
+ * Returns true if the prayer is a weekly (non-daily) prayer like Jumu'ah.
+ */
+export function isWeeklyPrayer(prayerName: string): boolean {
+  return prayerName === 'Jumuah';
 }

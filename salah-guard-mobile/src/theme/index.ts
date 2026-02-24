@@ -55,6 +55,7 @@ export const prayerGradients: Record<string, PrayerGradient> = {
   Asr: { start: '#78350F', end: '#F97316', icon: 'weather-sunny' },
   Maghrib: { start: '#831843', end: '#F43F5E', icon: 'weather-sunset-down' },
   Isha: { start: '#312E81', end: '#8B5CF6', icon: 'moon-waning-crescent' },
+  Jumuah: { start: '#064E3B', end: '#10B981', icon: 'mosque' },
 };
 
 export function getPrayerGradient(name: string): PrayerGradient {

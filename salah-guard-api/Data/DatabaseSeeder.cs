@@ -65,6 +65,15 @@ public static class DatabaseSeeder
                     DurationMinutes = 25,
                     IsEnabled = true,
                     ActiveDays = defaultDays
+                },
+                new()
+                {
+                    Name = "Jumuah",
+                    ArabicName = "جمعہ",
+                    ScheduledTime = new TimeSpan(13, 0, 0),
+                    DurationMinutes = 30,
+                    IsEnabled = true,
+                    ActiveDays = "[\"Fri\"]"
                 }
             };
 

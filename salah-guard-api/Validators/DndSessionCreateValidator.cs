@@ -15,7 +15,7 @@ public class DndSessionCreateValidator : AbstractValidator<DndSessionCreateDto>
 
     private static readonly HashSet<string> ValidPrayerNames = new(StringComparer.OrdinalIgnoreCase)
     {
-        "Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"
+        "Fajr", "Dhuhr", "Asr", "Maghrib", "Isha", "Jumuah"
     };
 
     public DndSessionCreateValidator()
@@ -23,7 +23,7 @@ public class DndSessionCreateValidator : AbstractValidator<DndSessionCreateDto>
         RuleFor(x => x.PrayerName)
             .NotEmpty().WithMessage("Prayer name is required.")
             .Must(name => ValidPrayerNames.Contains(name))
-            .WithMessage("Prayer name must be one of: Fajr, Dhuhr, Asr, Maghrib, Isha.");
+            .WithMessage("Prayer name must be one of: Fajr, Dhuhr, Asr, Maghrib, Isha, Jumuah.");
 
         RuleFor(x => x.StartTime)
             .NotEmpty().WithMessage("Start time is required.")

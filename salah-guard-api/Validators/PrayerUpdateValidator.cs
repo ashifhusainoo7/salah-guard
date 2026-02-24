@@ -15,7 +15,7 @@ public class PrayerUpdateValidator : AbstractValidator<PrayerUpdateDto>
 
     private static readonly HashSet<string> ValidPrayerNames = new(StringComparer.OrdinalIgnoreCase)
     {
-        "Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"
+        "Fajr", "Dhuhr", "Asr", "Maghrib", "Isha", "Jumuah"
     };
 
     public PrayerUpdateValidator()
@@ -26,7 +26,7 @@ public class PrayerUpdateValidator : AbstractValidator<PrayerUpdateDto>
                 .NotEmpty().WithMessage("Prayer name is required.")
                 .MaximumLength(20).WithMessage("Prayer name must not exceed 20 characters.")
                 .Must(name => ValidPrayerNames.Contains(name))
-                .WithMessage("Prayer name must be one of: Fajr, Dhuhr, Asr, Maghrib, Isha.");
+                .WithMessage("Prayer name must be one of: Fajr, Dhuhr, Asr, Maghrib, Isha, Jumuah.");
         });
 
         When(x => x.ScheduledTime is not null, () =>

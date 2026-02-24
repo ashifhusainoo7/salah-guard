@@ -16,7 +16,7 @@ import LoadingView from '../components/LoadingView';
 import EmptyState from '../components/EmptyState';
 import TimePickerModal from '../components/TimePickerModal';
 import { formatTime, formatScheduledTime } from '../utils/timeUtils';
-import { getPrayerColor } from '../utils/prayerUtils';
+import { getPrayerColor, isWeeklyPrayer } from '../utils/prayerUtils';
 import { getPrayerGradient } from '../theme';
 import { t } from '../i18n/strings';
 import { colors, spacing, radius, glassCard } from '../theme';
@@ -120,7 +120,7 @@ const ScheduleScreen: React.FC = () => {
         {prayers.length === 0 && !isLoading && (
           <EmptyState icon="calendar-blank" message="No prayer schedules found. Pull to refresh." />
         )}
-        {prayers.map((prayer) => {
+        {prayers.filter((p) => !isWeeklyPrayer(p.name)).map((prayer) => {
           const isEditing = editingPrayerId === prayer.id;
           const gradient = getPrayerGradient(prayer.name);
           const prayerColor = getPrayerColor(prayer.name);
@@ -151,6 +151,106 @@ const ScheduleScreen: React.FC = () => {
 
               {isEditing && (
                 <View style={styles.editSection}>
+                  <TouchableOpacity
+                    style={styles.timeButton}
+                    onPress={() => handleTimePress(prayer)}
+                    activeOpacity={0.7}
+                  >
+                    <Icon name="clock-outline" size={20} color={prayerColor} />
+                    <Text style={[styles.timeText, { color: prayerColor }]}>
+                      {formatScheduledTime(prayer.scheduledTime)}
+                    </Text>
+                    <Text style={styles.changeText}>Change</Text>
+                  </TouchableOpacity>
+
+                  <DurationSlider
+                    value={prayer.durationMinutes}
+                    onValueChange={(val) =>
+                      handleDurationChange(prayer.id, val)
+                    }
+                  />
+
+                  <Text style={styles.sectionLabel}>{t('daysOfWeek')}</Text>
+                  <View style={styles.daysRow}>
+                    {DAYS.map((day) => {
+                      const isActive = prayer.activeDays.includes(day);
+                      return (
+                        <TouchableOpacity
+                          key={day}
+                          style={[
+                            styles.dayButton,
+                            isActive && styles.dayButtonActive,
+                          ]}
+                          onPress={() => handleDayToggle(prayer, day)}
+                          activeOpacity={0.7}
+                        >
+                          <Text
+                            style={[
+                              styles.dayText,
+                              isActive && styles.dayTextActive,
+                            ]}
+                          >
+                            {dayTranslations[day]()}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.saveButton}
+                    onPress={handleSave}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.saveButtonText}>{t('save')}</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          );
+        })}
+
+        {/* Weekly prayers (Jumu'ah) section */}
+        {prayers.filter((p) => isWeeklyPrayer(p.name)).length > 0 && (
+          <>
+            <View style={styles.jumuahDivider} />
+            <View style={styles.jumuahSectionHeader}>
+              <Icon name="mosque" size={18} color={colors.accent.emerald} />
+              <Text style={styles.jumuahSectionLabel}>{t('jumuahSection')}</Text>
+            </View>
+          </>
+        )}
+        {prayers.filter((p) => isWeeklyPrayer(p.name)).map((prayer) => {
+          const isEditing = editingPrayerId === prayer.id;
+          const gradient = getPrayerGradient(prayer.name);
+          const prayerColor = getPrayerColor(prayer.name);
+
+          return (
+            <View key={prayer.id} style={styles.jumuahCard}>
+              <TouchableOpacity
+                style={styles.prayerHeader}
+                onPress={() =>
+                  setEditingPrayerId(isEditing ? null : prayer.id)
+                }
+                activeOpacity={0.7}
+              >
+                <View style={styles.prayerNameRow}>
+                  <View style={[styles.colorDot, { backgroundColor: prayerColor }]} />
+                  <Icon name={gradient.icon as any} size={20} color={prayerColor} />
+                  <Text style={styles.prayerName}>
+                    {t('jumuah')}
+                  </Text>
+                  <Text style={styles.arabicName}>{prayer.arabicName}</Text>
+                </View>
+                <Icon
+                  name={isEditing ? 'chevron-up' : 'chevron-down'}
+                  size={22}
+                  color={colors.text.muted}
+                />
+              </TouchableOpacity>
+
+              {isEditing && (
+                <View style={styles.jumuahEditSection}>
                   <TouchableOpacity
                     style={styles.timeButton}
                     onPress={() => handleTimePress(prayer)}
@@ -330,6 +430,43 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '700',
+  },
+  jumuahDivider: {
+    height: 1,
+    backgroundColor: 'rgba(16,185,129,0.25)',
+    marginVertical: spacing.lg,
+  },
+  jumuahSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: spacing.md,
+  },
+  jumuahSectionLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.accent.emerald,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  jumuahCard: {
+    backgroundColor: '#0D2818',
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.25)',
+    borderRadius: radius.lg,
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 6,
+    marginBottom: spacing.md,
+    overflow: 'hidden',
+  },
+  jumuahEditSection: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(16,185,129,0.15)',
   },
 });
 

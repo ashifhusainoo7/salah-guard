@@ -61,6 +61,7 @@ const defaultPrayers: Prayer[] = [
   { id: 3, name: 'Asr', arabicName: 'العصر', scheduledTime: '15:45', durationMinutes: 15, isEnabled: true, activeDays: ALL_DAYS },
   { id: 4, name: 'Maghrib', arabicName: 'المغرب', scheduledTime: '18:15', durationMinutes: 15, isEnabled: true, activeDays: ALL_DAYS },
   { id: 5, name: 'Isha', arabicName: 'العشاء', scheduledTime: '20:00', durationMinutes: 15, isEnabled: true, activeDays: ALL_DAYS },
+  { id: 6, name: 'Jumuah', arabicName: 'الجمعة', scheduledTime: '13:00', durationMinutes: 30, isEnabled: true, activeDays: ['Fri'] },
 ];
 
 /**

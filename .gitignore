@@ -76,3 +76,6 @@ nginx/certs/*.key
 
 # Sentry
 .sentryclirc
+
+android/app/*.keystore
+android/gradle.properties

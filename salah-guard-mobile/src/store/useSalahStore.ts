@@ -1,24 +1,27 @@
 /**
  * Zustand store for global app state management.
- * Handles prayers, settings, history, and offline fallback.
+ * All data is local — no network calls.
  */
 import { create } from 'zustand';
 import type {
   DndSession,
-  PaginatedResponse,
   Prayer,
   PrayerUpdatePayload,
   UserSettings,
 } from '../types';
-import * as api from '../services/api';
 import {
-  getCachedPrayers,
-  setCachedPrayers,
-  getCachedSettings,
-  setCachedSettings,
+  initializeAppData,
+  getPrayers,
+  updatePrayer as storageUpdatePrayer,
+  getSettings,
+  updateLocalSettings,
+  getHistory,
+  addDndSession,
+  defaultPrayers,
+  defaultSettings,
 } from '../utils/storage';
 import { scheduleAllAlarms } from '../services/alarmScheduler';
-import logger from '../utils/logger';
+import { getPendingNativeSessions, clearPendingNativeSessions } from '../services/dndBridge';
 
 interface SalahState {
   // Data
@@ -31,10 +34,9 @@ interface SalahState {
   // UI State
   isLoading: boolean;
   isRefreshing: boolean;
-  isOffline: boolean;
-  error: string | null;
 
   // Actions
+  initialize: () => Promise<void>;
   loadPrayers: () => Promise<void>;
   updatePrayer: (id: number, data: PrayerUpdatePayload) => Promise<void>;
   loadSettings: () => Promise<void>;
@@ -42,30 +44,10 @@ interface SalahState {
   loadHistory: (page?: number) => Promise<void>;
   refreshHistory: () => Promise<void>;
   toggleGlobalActive: () => Promise<void>;
-  setOffline: (offline: boolean) => void;
-  clearError: () => void;
 }
 
-const defaultSettings: UserSettings = {
-  isGloballyActive: true,
-  silentNotificationOnStart: true,
-  showLiftedNotification: true,
-  darkMode: false,
-};
-
-const ALL_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
-const defaultPrayers: Prayer[] = [
-  { id: 1, name: 'Fajr', arabicName: 'الفجر', scheduledTime: '05:30', durationMinutes: 15, isEnabled: true, activeDays: ALL_DAYS },
-  { id: 2, name: 'Dhuhr', arabicName: 'الظهر', scheduledTime: '12:30', durationMinutes: 15, isEnabled: true, activeDays: ALL_DAYS },
-  { id: 3, name: 'Asr', arabicName: 'العصر', scheduledTime: '15:45', durationMinutes: 15, isEnabled: true, activeDays: ALL_DAYS },
-  { id: 4, name: 'Maghrib', arabicName: 'المغرب', scheduledTime: '18:15', durationMinutes: 15, isEnabled: true, activeDays: ALL_DAYS },
-  { id: 5, name: 'Isha', arabicName: 'العشاء', scheduledTime: '20:00', durationMinutes: 15, isEnabled: true, activeDays: ALL_DAYS },
-  { id: 6, name: 'Jumuah', arabicName: 'الجمعة', scheduledTime: '13:00', durationMinutes: 30, isEnabled: true, activeDays: ['Fri'] },
-];
-
 /**
- * Merges a partial prayers array with defaults so all 5 are always present.
+ * Merges a partial prayers array with defaults so all 6 are always present.
  */
 function mergePrayers(source: Prayer[]): Prayer[] {
   return defaultPrayers.map((def) => {
@@ -82,133 +64,94 @@ const useSalahStore = create<SalahState>((set, get) => ({
   historyTotalPages: 1,
   isLoading: false,
   isRefreshing: false,
-  isOffline: false,
-  error: null,
+
+  initialize: async () => {
+    await initializeAppData();
+    const prayers = mergePrayers(getPrayers());
+    const settings = getSettings();
+    set({ prayers, settings });
+    scheduleAllAlarms(prayers, settings.isGloballyActive);
+
+    // Sync DND sessions that completed while the app was closed
+    try {
+      const pendingSessions = await getPendingNativeSessions();
+      for (const session of pendingSessions) {
+        addDndSession({
+          prayerName: session.prayerName,
+          startTime: session.startTime,
+          endTime: session.endTime,
+          durationMinutes: session.durationMinutes,
+          status: session.status || 'Completed',
+        });
+      }
+      if (pendingSessions.length > 0) {
+        await clearPendingNativeSessions();
+      }
+    } catch {
+      // Non-critical — sessions will sync next time
+    }
+  },
 
   loadPrayers: async () => {
-    set({ isLoading: true, error: null });
-    try {
-      const apiPrayers = await api.fetchPrayers();
-      const prayers = mergePrayers(apiPrayers);
-      setCachedPrayers(prayers);
-      set({ prayers, isLoading: false, isOffline: false });
-      scheduleAllAlarms(prayers, get().settings.isGloballyActive);
-    } catch (err) {
-      logger.error('Failed to load prayers from API, using cache:', err);
-      const cached = getCachedPrayers();
-      const prayers = mergePrayers(cached ?? []);
-      setCachedPrayers(prayers);
-      set({ prayers, isLoading: false, isOffline: true, error: null });
-      scheduleAllAlarms(prayers, get().settings.isGloballyActive);
-    }
+    set({ isLoading: true });
+    const prayers = mergePrayers(getPrayers());
+    set({ prayers, isLoading: false });
+    scheduleAllAlarms(prayers, get().settings.isGloballyActive);
   },
 
   updatePrayer: async (id: number, data: PrayerUpdatePayload) => {
-    set({ error: null });
-    // Optimistic: update UI instantly
-    const optimistic = get().prayers.map((p) =>
-      p.id === id ? { ...p, ...data } : p,
-    );
-    setCachedPrayers(optimistic as Prayer[]);
-    set({ prayers: optimistic as Prayer[] });
-    try {
-      const updated = await api.updatePrayer(id, data);
-      const prayers = get().prayers.map((p) => (p.id === id ? updated : p));
-      setCachedPrayers(prayers);
-      set({ prayers });
-      scheduleAllAlarms(prayers, get().settings.isGloballyActive);
-    } catch (err) {
-      logger.error('Failed to update prayer:', err);
-      // Already set optimistically; schedule alarms with local data
-      scheduleAllAlarms(get().prayers, get().settings.isGloballyActive);
-    }
+    const prayers = storageUpdatePrayer(id, data);
+    set({ prayers });
+    scheduleAllAlarms(prayers, get().settings.isGloballyActive);
   },
 
   loadSettings: async () => {
-    try {
-      const settings = await api.fetchSettings();
-      setCachedSettings(settings);
-      set({ settings });
-    } catch (err) {
-      logger.error('Failed to load settings, using cache:', err);
-      const cached = getCachedSettings();
-      if (cached) {
-        set({ settings: cached });
-      }
-    }
+    const settings = getSettings();
+    set({ settings });
   },
 
   updateSettings: async (data: UserSettings) => {
-    set({ error: null });
-    // Optimistic: update UI instantly
-    setCachedSettings(data);
-    set({ settings: data });
-    try {
-      const settings = await api.updateSettings(data);
-      setCachedSettings(settings);
-      set({ settings });
-      scheduleAllAlarms(get().prayers, settings.isGloballyActive);
-    } catch (err) {
-      logger.error('Failed to update settings:', err);
-      // Already set optimistically; schedule alarms with local data
-      scheduleAllAlarms(get().prayers, data.isGloballyActive);
-    }
+    const settings = updateLocalSettings(data);
+    set({ settings });
+    scheduleAllAlarms(get().prayers, settings.isGloballyActive);
   },
 
   loadHistory: async (page?: number) => {
     const targetPage = page ?? get().historyPage;
-    set({ isLoading: true, error: null });
-    try {
-      const result: PaginatedResponse<DndSession> = await api.fetchHistory(targetPage, 20);
-      if (targetPage === 1) {
-        set({
-          history: result.items,
-          historyPage: result.page,
-          historyTotalPages: result.totalPages,
-          isLoading: false,
-        });
-      } else {
-        set({
-          history: [...get().history, ...result.items],
-          historyPage: result.page,
-          historyTotalPages: result.totalPages,
-          isLoading: false,
-        });
-      }
-    } catch (err) {
-      logger.error('Failed to load history:', err);
-      set({ isLoading: false, error: 'Failed to load history.' });
+    set({ isLoading: true });
+    const result = getHistory(targetPage, 20);
+    if (targetPage === 1) {
+      set({
+        history: result.items,
+        historyPage: result.page,
+        historyTotalPages: result.totalPages,
+        isLoading: false,
+      });
+    } else {
+      set({
+        history: [...get().history, ...result.items],
+        historyPage: result.page,
+        historyTotalPages: result.totalPages,
+        isLoading: false,
+      });
     }
   },
 
   refreshHistory: async () => {
     set({ isRefreshing: true });
-    try {
-      const result: PaginatedResponse<DndSession> = await api.fetchHistory(1, 20);
-      set({
-        history: result.items,
-        historyPage: 1,
-        historyTotalPages: result.totalPages,
-        isRefreshing: false,
-      });
-    } catch (err) {
-      logger.error('Failed to refresh history:', err);
-      set({ isRefreshing: false });
-    }
+    const result = getHistory(1, 20);
+    set({
+      history: result.items,
+      historyPage: 1,
+      historyTotalPages: result.totalPages,
+      isRefreshing: false,
+    });
   },
 
   toggleGlobalActive: async () => {
     const current = get().settings;
     const updated = { ...current, isGloballyActive: !current.isGloballyActive };
     await get().updateSettings(updated);
-  },
-
-  setOffline: (offline: boolean) => {
-    set({ isOffline: offline });
-  },
-
-  clearError: () => {
-    set({ error: null });
   },
 }));
 

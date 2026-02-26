@@ -17,3 +17,5 @@
 -keep class com.salahguard.DndModule { *; }
 -keep class com.salahguard.DndPackage { *; }
 -keep class com.salahguard.BootReceiver { *; }
+-keep class com.salahguard.DndAlarmScheduler { *; }
+-keep class com.salahguard.DndAlarmReceiver { *; }

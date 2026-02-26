@@ -15,6 +15,10 @@ interface DndModuleInterface {
   hasDndPermission: () => Promise<boolean>;
   requestDndPermission: () => Promise<void>;
   requestBatteryOptimizationExclusion: () => Promise<void>;
+  schedulePrayers: (prayersJson: string, isGloballyActive: boolean) => Promise<boolean>;
+  cancelAllAlarms: () => Promise<boolean>;
+  getPendingSessions: () => Promise<string>;
+  clearPendingSessions: () => Promise<boolean>;
 }
 
 const { DndModule } = NativeModules;
@@ -181,6 +185,71 @@ export async function requestBatteryOptimizationExclusion(): Promise<void> {
     } catch {
       logger.error('Failed to open any settings screen');
     }
+  }
+}
+
+/**
+ * Schedules DND alarms via native AlarmManager.
+ * These fire even when the app is killed — no foreground service needed.
+ */
+export async function scheduleNativeAlarms(
+  prayers: import('../types').Prayer[],
+  isGloballyActive: boolean,
+): Promise<boolean> {
+  if (Platform.OS !== 'android' || !nativeDnd) {
+    return false;
+  }
+  try {
+    return await nativeDnd.schedulePrayers(JSON.stringify(prayers), isGloballyActive);
+  } catch (err) {
+    logger.error('Failed to schedule native alarms:', err);
+    return false;
+  }
+}
+
+/**
+ * Cancels all pending native DND alarms.
+ */
+export async function cancelNativeAlarms(): Promise<boolean> {
+  if (Platform.OS !== 'android' || !nativeDnd) {
+    return false;
+  }
+  try {
+    return await nativeDnd.cancelAllAlarms();
+  } catch (err) {
+    logger.error('Failed to cancel native alarms:', err);
+    return false;
+  }
+}
+
+/**
+ * Gets DND sessions that completed while the app was closed.
+ * Returns parsed array of session objects.
+ */
+export async function getPendingNativeSessions(): Promise<import('../types').DndSession[]> {
+  if (Platform.OS !== 'android' || !nativeDnd) {
+    return [];
+  }
+  try {
+    const json = await nativeDnd.getPendingSessions();
+    return JSON.parse(json);
+  } catch (err) {
+    logger.error('Failed to get pending native sessions:', err);
+    return [];
+  }
+}
+
+/**
+ * Clears pending sessions after they've been synced into AsyncStorage.
+ */
+export async function clearPendingNativeSessions(): Promise<void> {
+  if (Platform.OS !== 'android' || !nativeDnd) {
+    return;
+  }
+  try {
+    await nativeDnd.clearPendingSessions();
+  } catch (err) {
+    logger.error('Failed to clear pending native sessions:', err);
   }
 }
 

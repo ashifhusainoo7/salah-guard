@@ -11,7 +11,6 @@ import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import type { Prayer } from '../types';
 import useSalahStore from '../store/useSalahStore';
 import DurationSlider from '../components/DurationSlider';
-import OfflineBanner from '../components/OfflineBanner';
 import LoadingView from '../components/LoadingView';
 import EmptyState from '../components/EmptyState';
 import TimePickerModal from '../components/TimePickerModal';
@@ -103,7 +102,6 @@ const ScheduleScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <OfflineBanner />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}

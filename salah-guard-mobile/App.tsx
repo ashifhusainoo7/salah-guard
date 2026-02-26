@@ -3,9 +3,7 @@ import { StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AppNavigator from './src/navigation/AppNavigator';
 import ErrorBoundary from './src/components/ErrorBoundary';
-import LoadingView from './src/components/LoadingView';
-import { useNetworkStatus } from './src/hooks/useNetworkStatus';
-import { useAuth } from './src/hooks/useAuth';
+import useSalahStore from './src/store/useSalahStore';
 import {
   initializeNotificationChannel,
   configureNotificationListener,
@@ -13,18 +11,14 @@ import {
 import logger from './src/utils/logger';
 
 const App: React.FC = () => {
-  const { isInitializing } = useAuth();
-  useNetworkStatus();
+  const initialize = useSalahStore((s) => s.initialize);
 
   useEffect(() => {
+    initialize();
     initializeNotificationChannel();
     configureNotificationListener();
     logger.info('App initialized');
-  }, []);
-
-  if (isInitializing) {
-    return <LoadingView />;
-  }
+  }, [initialize]);
 
   return (
     <SafeAreaProvider>

@@ -103,4 +103,59 @@ class DndModule(reactContext: ReactApplicationContext) :
                     "Failed to request battery optimization exclusion: ${e.message}", e)
         }
     }
+
+    /**
+     * Store prayers in SharedPreferences and schedule native AlarmManager alarms.
+     * These fire even when the app is killed.
+     */
+    @ReactMethod
+    fun schedulePrayers(prayersJson: String, isGloballyActive: Boolean, promise: Promise) {
+        try {
+            DndAlarmScheduler.savePrayers(reactApplicationContext, prayersJson, isGloballyActive)
+            DndAlarmScheduler.scheduleAll(reactApplicationContext)
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("DND_ERROR", "Failed to schedule prayers: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Cancel all pending DND alarms.
+     */
+    @ReactMethod
+    fun cancelAllAlarms(promise: Promise) {
+        try {
+            DndAlarmScheduler.cancelAll(reactApplicationContext)
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("DND_ERROR", "Failed to cancel alarms: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Get DND sessions that completed while the app was closed (stored in SharedPreferences).
+     * Returns a JSON array string.
+     */
+    @ReactMethod
+    fun getPendingSessions(promise: Promise) {
+        try {
+            val sessions = DndAlarmScheduler.getPendingSessions(reactApplicationContext)
+            promise.resolve(sessions)
+        } catch (e: Exception) {
+            promise.reject("DND_ERROR", "Failed to get pending sessions: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Clear pending sessions after the JS side has synced them into AsyncStorage.
+     */
+    @ReactMethod
+    fun clearPendingSessions(promise: Promise) {
+        try {
+            DndAlarmScheduler.clearPendingSessions(reactApplicationContext)
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("DND_ERROR", "Failed to clear pending sessions: ${e.message}", e)
+        }
+    }
 }

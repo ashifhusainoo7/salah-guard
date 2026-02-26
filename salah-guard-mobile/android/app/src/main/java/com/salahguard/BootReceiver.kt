@@ -5,6 +5,11 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 
+/**
+ * Reschedules DND alarms after device reboot, time change, or timezone change.
+ * Reads the stored prayer schedule from SharedPreferences and sets up AlarmManager alarms.
+ * No need to launch the app — runs entirely in the background.
+ */
 class BootReceiver : BroadcastReceiver() {
 
     companion object {
@@ -12,24 +17,18 @@ class BootReceiver : BroadcastReceiver() {
     }
 
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action == Intent.ACTION_BOOT_COMPLETED ||
-            intent.action == "android.intent.action.QUICKBOOT_POWERON") {
-            Log.i(TAG, "Device rebooted - scheduling alarm reschedule")
+        val action = intent.action
+        if (action == Intent.ACTION_BOOT_COMPLETED ||
+            action == "android.intent.action.QUICKBOOT_POWERON" ||
+            action == Intent.ACTION_TIME_CHANGED ||
+            action == Intent.ACTION_TIMEZONE_CHANGED) {
+            Log.i(TAG, "Received $action - rescheduling DND alarms")
 
             try {
-                val launchIntent = context.packageManager
-                    .getLaunchIntentForPackage(context.packageName)
-
-                if (launchIntent != null) {
-                    launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    launchIntent.putExtra("BOOT_RESCHEDULE", true)
-                    context.startActivity(launchIntent)
-                    Log.i(TAG, "App launch intent sent for alarm rescheduling")
-                } else {
-                    Log.w(TAG, "Could not find launch intent for package")
-                }
+                DndAlarmScheduler.scheduleAll(context)
+                Log.i(TAG, "DND alarms rescheduled after $action")
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to handle boot: ${e.message}", e)
+                Log.e(TAG, "Failed to reschedule after $action: ${e.message}", e)
             }
         }
     }

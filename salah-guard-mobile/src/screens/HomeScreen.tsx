@@ -13,7 +13,6 @@ import { getNextPrayer, isWeeklyPrayer } from '../utils/prayerUtils';
 import MasterToggle from '../components/MasterToggle';
 import CountdownTimer from '../components/CountdownTimer';
 import PrayerCard from '../components/PrayerCard';
-import OfflineBanner from '../components/OfflineBanner';
 import LoadingView from '../components/LoadingView';
 import EmptyState from '../components/EmptyState';
 import { t } from '../i18n/strings';
@@ -55,7 +54,6 @@ const HomeScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <OfflineBanner />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}

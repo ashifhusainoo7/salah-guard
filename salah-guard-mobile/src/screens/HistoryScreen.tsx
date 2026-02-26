@@ -10,7 +10,6 @@ import {
 import type { DndSession } from '../types';
 import useSalahStore from '../store/useSalahStore';
 import HistoryItem from '../components/HistoryItem';
-import OfflineBanner from '../components/OfflineBanner';
 import LoadingView from '../components/LoadingView';
 import EmptyState from '../components/EmptyState';
 import { t } from '../i18n/strings';
@@ -66,7 +65,6 @@ const HistoryScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <OfflineBanner />
       <FlatList
         data={history}
         renderItem={renderItem}

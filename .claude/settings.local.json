@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:notifee.app)",
+      "WebFetch(domain:nek12.dev)",
+      "WebFetch(domain:dev.to)",
+      "WebFetch(domain:dontkillmyapp.com)",
+      "WebFetch(domain:codewithninad.com)",
+      "Bash(eas build:*)",
+      "Bash(eas whoami:*)"
+    ]
+  }
+}

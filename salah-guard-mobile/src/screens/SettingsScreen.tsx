@@ -23,7 +23,6 @@ import {
   requestNotificationPermission,
 } from '../services/iosNotifications';
 import IosFocusHelper from '../screens/IosFocusHelper';
-import OfflineBanner from '../components/OfflineBanner';
 import { t } from '../i18n/strings';
 import { colors, spacing, radius, glassCard } from '../theme';
 
@@ -85,7 +84,7 @@ const SettingsScreen: React.FC = () => {
   }, [notificationsEnabled]);
 
   const handlePrivacyPolicy = useCallback(() => {
-    Linking.openURL('https://salahguard.app/privacy').catch(() => {});
+    Linking.openURL('https://ashifhusainoo7.github.io/smart-salah-privacy/').catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -105,7 +104,6 @@ const SettingsScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <OfflineBanner />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}

@@ -37,6 +37,15 @@
       <intent-filter>
         <action android:name="android.intent.action.BOOT_COMPLETED"/>
         <action android:name="android.intent.action.QUICKBOOT_POWERON"/>
+        <action android:name="android.intent.action.TIME_SET"/>
+        <action android:name="android.intent.action.TIMEZONE_CHANGED"/>
+      </intent-filter>
+    </receiver>
+    <receiver android:name=".DndAlarmReceiver" android:enabled="true" android:exported="false">
+      <intent-filter>
+        <action android:name="com.salahguard.ENABLE_DND"/>
+        <action android:name="com.salahguard.DISABLE_DND"/>
+        <action android:name="com.salahguard.RESCHEDULE"/>
       </intent-filter>
     </receiver>
   </application>

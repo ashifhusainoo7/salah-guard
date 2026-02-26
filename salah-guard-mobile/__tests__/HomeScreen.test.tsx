@@ -39,7 +39,6 @@ jest.mock('../src/store/useSalahStore', () => {
         prayers: mockPrayers,
         settings: { isGloballyActive: true },
         isLoading: false,
-        isOffline: false,
         loadPrayers: jest.fn().mockResolvedValue(undefined),
         loadSettings: jest.fn().mockResolvedValue(undefined),
       };

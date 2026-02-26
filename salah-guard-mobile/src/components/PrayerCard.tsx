@@ -17,7 +17,6 @@ interface PrayerCardProps {
 
 const PrayerCard: React.FC<PrayerCardProps> = React.memo(({ prayer, isNext }) => {
   const updatePrayer = useSalahStore((s) => s.updatePrayer);
-  debugger
   const handleToggle = useCallback(
     (value: boolean) => {
       updatePrayer(prayer.id, { isEnabled: value }).catch(() => { });

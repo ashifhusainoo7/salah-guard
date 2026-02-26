@@ -1,14 +1,31 @@
 /**
- * Alarm scheduling service using react-native-background-actions.
- * Runs a persistent background task that enables/disables DND at prayer times.
+ * Alarm scheduling service — dual-layer approach:
+ *
+ * Layer 1 (App Open):  react-native-background-actions foreground service
+ *   - Runs a JS loop that sleeps until prayer time, toggles DND, logs session
+ *   - Works reliably while the app process is alive
+ *   - Gets killed when user swipes the app away (JS runtime dies)
+ *
+ * Layer 2 (App Killed): Native AlarmManager.setAlarmClock() + BroadcastReceiver
+ *   - Schedules exact alarms in Kotlin via DndModule.schedulePrayers()
+ *   - DndAlarmReceiver toggles DND in pure native code — no JS needed
+ *   - Survives app kill, screen off, Doze mode, and device reboot
+ *   - Sessions logged to SharedPreferences, synced to JS on next app open
+ *
+ * Both layers run in parallel. When the app is open, the foreground service
+ * handles DND directly. When the app is killed, native alarms take over.
+ * On app re-open, pending native sessions are synced into local storage.
+ *
+ * iOS: Uses expo-notifications local notifications (DND can't be automated).
  */
 import { Platform } from 'react-native';
 import type { Prayer } from '../types';
 import { getMergedDndWindows } from '../utils/prayerUtils';
 import { getMillisUntilTime } from '../utils/timeUtils';
 import { enableDnd, disableDnd } from './dndBridge';
-import { logDndSession } from './api';
+import { scheduleNativeAlarms, cancelNativeAlarms } from './dndBridge';
 import { scheduleIosPrayerNotifications, cancelAllIosNotifications } from './iosNotifications';
+import { addDndSession } from '../utils/storage';
 import logger from '../utils/logger';
 
 const BACKGROUND_TASK_OPTIONS = {
@@ -45,6 +62,7 @@ let cachedIsGloballyActive = false;
 /**
  * The background task loop that manages DND windows.
  * Runs continuously, sleeping until the next prayer window.
+ * This is Layer 1 — works while the app process is alive.
  */
 async function dndTaskLoop(): Promise<void> {
   const BackgroundService = getBackgroundService();
@@ -56,12 +74,10 @@ async function dndTaskLoop(): Promise<void> {
       const windows = getMergedDndWindows(cachedPrayers);
 
       if (windows.length === 0) {
-        // No windows today — sleep 5 minutes and re-check
         await sleep(5 * 60 * 1000);
         continue;
       }
 
-      // Find the next upcoming window
       let nextWindow = null;
       let sleepMs = Infinity;
 
@@ -78,7 +94,6 @@ async function dndTaskLoop(): Promise<void> {
         continue;
       }
 
-      // Sleep until the next window starts
       if (sleepMs > 1000) {
         logger.info(`DND: sleeping ${Math.round(sleepMs / 1000)}s until ${nextWindow.startTime} (${nextWindow.prayerNames.join(', ')})`);
         await sleep(sleepMs);
@@ -86,7 +101,7 @@ async function dndTaskLoop(): Promise<void> {
 
       if (!BackgroundService.isRunning()) break;
 
-      // Re-validate after sleep: the day may have changed (e.g. slept from Mon night to Tue morning)
+      // Re-validate after sleep
       const freshWindows = getMergedDndWindows(cachedPrayers);
       const stillValid = freshWindows.some((w) => w.startTime === nextWindow.startTime);
       if (!stillValid) {
@@ -113,45 +128,39 @@ async function dndTaskLoop(): Promise<void> {
       const endTime = new Date().toISOString();
       logger.info(`DND: disabled after ${nextWindow.prayerNames.join(', ')}`);
 
-      // Log the session to the API
+      // Log the session to local storage
       try {
-        await logDndSession({
+        addDndSession({
           prayerName: nextWindow.prayerNames.join(', '),
           startTime,
           endTime,
           durationMinutes: nextWindow.durationMinutes,
           status: 'Completed',
         });
-        logger.info('DND: session logged to API');
+        logger.info('DND: session logged locally');
       } catch (err) {
         logger.error('DND: failed to log session:', err);
       }
     } catch (err) {
       logger.error('DND: error in task loop:', err);
-      // Sleep briefly before retrying to avoid tight error loops
       await sleep(30 * 1000);
     }
   }
 }
 
-/**
- * Promise-based sleep that works inside background tasks.
- */
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
- * Initializes the notification channel for the background service.
- * On Android, react-native-background-actions handles this automatically
- * via the taskOptions, but we call updateNotification to ensure it's set up.
+ * Initializes the notification channel.
  */
 export function initializeNotificationChannel(): void {
   logger.info('DND: notification channel initialized');
 }
 
 /**
- * Cancels all scheduled alarms by stopping the background service.
+ * Cancels all scheduled alarms — both the foreground service and native alarms.
  */
 export async function cancelAllScheduledAlarms(): Promise<void> {
   if (Platform.OS === 'ios') {
@@ -159,27 +168,34 @@ export async function cancelAllScheduledAlarms(): Promise<void> {
     return;
   }
 
+  // Cancel Layer 1: foreground service
   const BackgroundService = getBackgroundService();
-  if (!BackgroundService) return;
-  try {
-    if (BackgroundService.isRunning()) {
-      await BackgroundService.stop();
-      logger.info('DND: background service stopped');
+  if (BackgroundService) {
+    try {
+      if (BackgroundService.isRunning()) {
+        await BackgroundService.stop();
+        logger.info('DND: background service stopped');
+      }
+    } catch (err) {
+      logger.error('DND: failed to stop background service:', err);
     }
-  } catch (err) {
-    logger.error('DND: failed to stop background service:', err);
   }
+
+  // Cancel Layer 2: native AlarmManager alarms
+  await cancelNativeAlarms();
+  logger.info('DND: native alarms cancelled');
 }
 
 /**
- * Schedules DND alarms for all enabled prayers using a background service.
- * Stops any existing task and starts a new one if there are active prayers.
+ * Schedules DND for all enabled prayers using both layers:
+ * 1. Background service foreground task (works while app is open)
+ * 2. Native AlarmManager alarms (works when app is killed)
  */
 export async function scheduleAllAlarms(
   prayers: Prayer[],
   isGloballyActive: boolean,
 ): Promise<void> {
-  // Stop any existing background task
+  // Stop any existing scheduling
   await cancelAllScheduledAlarms();
 
   if (!isGloballyActive) {
@@ -193,27 +209,33 @@ export async function scheduleAllAlarms(
     return;
   }
 
-  // iOS: use local notifications instead of background service
+  // iOS: use local notifications
   if (Platform.OS === 'ios') {
     await scheduleIosPrayerNotifications(prayers);
     return;
   }
 
-  const BackgroundService = getBackgroundService();
-  if (!BackgroundService) {
-    logger.warn('DND: background service not available — native module not linked');
-    return;
+  // --- Layer 2: Native AlarmManager (safety net for when app is killed) ---
+  // Schedule this FIRST so alarms are in place even if the foreground service fails
+  const nativeSuccess = await scheduleNativeAlarms(prayers, isGloballyActive);
+  if (nativeSuccess) {
+    logger.info(`DND: native alarms scheduled for ${enabledPrayers.length} prayers`);
+  } else {
+    logger.warn('DND: failed to schedule native alarms — native module may not be linked');
   }
 
-  // Cache prayer data for the background task
-  cachedPrayers = prayers;
-  cachedIsGloballyActive = isGloballyActive;
+  // --- Layer 1: Background service (immediate DND when app is open) ---
+  const BackgroundService = getBackgroundService();
+  if (BackgroundService) {
+    cachedPrayers = prayers;
+    cachedIsGloballyActive = isGloballyActive;
 
-  try {
-    await BackgroundService.start(dndTaskLoop, BACKGROUND_TASK_OPTIONS);
-    logger.info(`DND: background service started with ${enabledPrayers.length} enabled prayers`);
-  } catch (err) {
-    logger.error('DND: failed to start background service:', err);
+    try {
+      await BackgroundService.start(dndTaskLoop, BACKGROUND_TASK_OPTIONS);
+      logger.info(`DND: background service started with ${enabledPrayers.length} enabled prayers`);
+    } catch (err) {
+      logger.error('DND: failed to start background service:', err);
+    }
   }
 }
 

@@ -62,6 +62,9 @@ salah-guard-api/appsettings.Production.json
 Thumbs.db
 Desktop.ini
 
+# Expo
+salah-guard-mobile/.expo/
+
 # Metro bundler
 salah-guard-mobile/.metro-health-check*
 

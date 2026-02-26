@@ -39,7 +39,7 @@ class DndModule(reactContext: ReactApplicationContext) :
                 promise.resolve(false)
                 return
             }
-            nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_NONE)
+            nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_PRIORITY)
             promise.resolve(true)
         } catch (e: Exception) {
             promise.reject("DND_ERROR", "Failed to enable DND: \${e.message}", e)
@@ -93,6 +93,18 @@ class DndModule(reactContext: ReactApplicationContext) :
             promise.resolve(null)
         } catch (e: Exception) {
             promise.reject("DND_ERROR", "Failed to open DND settings: \${e.message}", e)
+        }
+    }
+
+    @ReactMethod
+    fun isBatteryOptimizationExcluded(promise: Promise) {
+        try {
+            val pm = reactApplicationContext.getSystemService(Context.POWER_SERVICE)
+                    as PowerManager
+            promise.resolve(pm.isIgnoringBatteryOptimizations(reactApplicationContext.packageName))
+        } catch (e: Exception) {
+            promise.reject("DND_ERROR",
+                    "Failed to check battery optimization status: \${e.message}", e)
         }
     }
 
@@ -274,7 +286,7 @@ object DndAlarmScheduler {
             if (startMillis <= now && endMillis > now) {
                 val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                 if (nm.isNotificationPolicyAccessGranted) {
-                    nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_NONE)
+                    nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_PRIORITY)
                     Log.i(TAG, "Currently in prayer window for \$prayerName, DND enabled")
                     prefs.edit()
                         .putString("current_dnd_prayer", prayerName)
@@ -454,7 +466,7 @@ class DndAlarmReceiver : BroadcastReceiver() {
     private fun handleEnableDnd(context: Context, prayerName: String, duration: Int) {
         val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (!nm.isNotificationPolicyAccessGranted) return
-        nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_NONE)
+        nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_PRIORITY)
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
             .putString("current_dnd_prayer", prayerName)
             .putLong("current_dnd_start", System.currentTimeMillis())

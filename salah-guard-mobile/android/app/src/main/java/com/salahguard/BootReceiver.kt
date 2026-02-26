@@ -5,11 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 
-/**
- * Reschedules DND alarms after device reboot, time change, or timezone change.
- * Reads the stored prayer schedule from SharedPreferences and sets up AlarmManager alarms.
- * No need to launch the app — runs entirely in the background.
- */
 class BootReceiver : BroadcastReceiver() {
 
     companion object {

@@ -27,7 +27,7 @@ class DndModule(reactContext: ReactApplicationContext) :
                 promise.resolve(false)
                 return
             }
-            nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_NONE)
+            nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_PRIORITY)
             promise.resolve(true)
         } catch (e: Exception) {
             promise.reject("DND_ERROR", "Failed to enable DND: ${e.message}", e)
@@ -85,6 +85,18 @@ class DndModule(reactContext: ReactApplicationContext) :
     }
 
     @ReactMethod
+    fun isBatteryOptimizationExcluded(promise: Promise) {
+        try {
+            val pm = reactApplicationContext.getSystemService(Context.POWER_SERVICE)
+                    as PowerManager
+            promise.resolve(pm.isIgnoringBatteryOptimizations(reactApplicationContext.packageName))
+        } catch (e: Exception) {
+            promise.reject("DND_ERROR",
+                    "Failed to check battery optimization status: ${e.message}", e)
+        }
+    }
+
+    @ReactMethod
     fun requestBatteryOptimizationExclusion(promise: Promise) {
         try {
             val pm = reactApplicationContext.getSystemService(Context.POWER_SERVICE)
@@ -104,10 +116,6 @@ class DndModule(reactContext: ReactApplicationContext) :
         }
     }
 
-    /**
-     * Store prayers in SharedPreferences and schedule native AlarmManager alarms.
-     * These fire even when the app is killed.
-     */
     @ReactMethod
     fun schedulePrayers(prayersJson: String, isGloballyActive: Boolean, promise: Promise) {
         try {
@@ -119,9 +127,6 @@ class DndModule(reactContext: ReactApplicationContext) :
         }
     }
 
-    /**
-     * Cancel all pending DND alarms.
-     */
     @ReactMethod
     fun cancelAllAlarms(promise: Promise) {
         try {
@@ -132,10 +137,6 @@ class DndModule(reactContext: ReactApplicationContext) :
         }
     }
 
-    /**
-     * Get DND sessions that completed while the app was closed (stored in SharedPreferences).
-     * Returns a JSON array string.
-     */
     @ReactMethod
     fun getPendingSessions(promise: Promise) {
         try {
@@ -146,9 +147,6 @@ class DndModule(reactContext: ReactApplicationContext) :
         }
     }
 
-    /**
-     * Clear pending sessions after the JS side has synced them into AsyncStorage.
-     */
     @ReactMethod
     fun clearPendingSessions(promise: Promise) {
         try {

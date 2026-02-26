@@ -14,6 +14,7 @@ interface DndModuleInterface {
   isDndEnabled: () => Promise<boolean>;
   hasDndPermission: () => Promise<boolean>;
   requestDndPermission: () => Promise<void>;
+  isBatteryOptimizationExcluded: () => Promise<boolean>;
   requestBatteryOptimizationExclusion: () => Promise<void>;
   schedulePrayers: (prayersJson: string, isGloballyActive: boolean) => Promise<boolean>;
   cancelAllAlarms: () => Promise<boolean>;
@@ -186,6 +187,27 @@ export async function requestBatteryOptimizationExclusion(): Promise<void> {
       logger.error('Failed to open any settings screen');
     }
   }
+}
+
+/**
+ * Checks whether the app is excluded from battery optimization.
+ * Android only — iOS always returns true (not applicable).
+ */
+export async function isBatteryOptimizationExcluded(): Promise<boolean> {
+  if (Platform.OS !== 'android') {
+    return true;
+  }
+
+  if (nativeDnd) {
+    try {
+      return await nativeDnd.isBatteryOptimizationExcluded();
+    } catch (err) {
+      logger.error('Failed to check battery optimization status:', err);
+      return false;
+    }
+  }
+
+  return false;
 }
 
 /**

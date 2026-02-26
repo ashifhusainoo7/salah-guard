@@ -3,6 +3,7 @@ import { StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AppNavigator from './src/navigation/AppNavigator';
 import ErrorBoundary from './src/components/ErrorBoundary';
+import PermissionSetupModal from './src/components/PermissionSetupModal';
 import useSalahStore from './src/store/useSalahStore';
 import {
   initializeNotificationChannel,
@@ -26,6 +27,7 @@ const App: React.FC = () => {
       <ErrorBoundary>
         <AppNavigator />
       </ErrorBoundary>
+      <PermissionSetupModal />
     </SafeAreaProvider>
   );
 };

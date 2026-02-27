@@ -4,7 +4,7 @@
   "expo": {
     "name": "Smart Salah",
     "slug": "salah-guard",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "icon": "./assets/logoforsalah.png",

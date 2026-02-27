@@ -64,6 +64,7 @@ interface Strings {
   iosFocusSetup: string;
   iosFocusConfigured: string;
   iosFocusSetupRequired: string;
+  hour: string;
 }
 
 const en: Strings = {
@@ -132,6 +133,7 @@ const en: Strings = {
   iosFocusSetup: 'DND Reminders',
   iosFocusConfigured: 'Enabled',
   iosFocusSetupRequired: 'Tap to enable',
+  hour: 'hr',
 };
 
 const ur: Strings = {
@@ -200,6 +202,7 @@ const ur: Strings = {
   iosFocusSetup: 'ڈی این ڈی یاد دہانی',
   iosFocusConfigured: 'فعال',
   iosFocusSetupRequired: 'فعال کرنے کے لیے ٹیپ کریں',
+  hour: 'گھنٹہ',
 };
 
 const translations: Record<SupportedLanguage, Strings> = { en, ur };

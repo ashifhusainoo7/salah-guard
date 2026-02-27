@@ -271,26 +271,26 @@ const ScheduleScreen: React.FC = () => {
                   <Text style={styles.sectionLabel}>{t('daysOfWeek')}</Text>
                   <View style={styles.daysRow}>
                     {DAYS.map((day) => {
-                      const isActive = prayer.activeDays.includes(day);
+                      const isFriday = day === 'Fri';
                       return (
-                        <TouchableOpacity
+                        <View
                           key={day}
                           style={[
                             styles.dayButton,
-                            isActive && styles.dayButtonActive,
+                            isFriday && styles.dayButtonActive,
+                            !isFriday && styles.dayButtonDisabled,
                           ]}
-                          onPress={() => handleDayToggle(prayer, day)}
-                          activeOpacity={0.7}
                         >
                           <Text
                             style={[
                               styles.dayText,
-                              isActive && styles.dayTextActive,
+                              isFriday && styles.dayTextActive,
+                              !isFriday && styles.dayTextDisabled,
                             ]}
                           >
                             {dayTranslations[day]()}
                           </Text>
-                        </TouchableOpacity>
+                        </View>
                       );
                     })}
                   </View>
@@ -408,6 +408,9 @@ const styles = StyleSheet.create({
   dayButtonActive: {
     backgroundColor: colors.accent.emerald,
   },
+  dayButtonDisabled: {
+    opacity: 0.35,
+  },
   dayText: {
     fontSize: 11,
     fontWeight: '600',
@@ -416,6 +419,9 @@ const styles = StyleSheet.create({
   dayTextActive: {
     color: '#FFFFFF',
     fontWeight: '700',
+  },
+  dayTextDisabled: {
+    color: colors.text.muted,
   },
   saveButton: {
     backgroundColor: colors.accent.emerald,

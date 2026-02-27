@@ -6,20 +6,16 @@ import { colors, spacing, radius } from '../theme';
 interface DurationSliderProps {
   value: number;
   onValueChange: (value: number) => void;
-  minimumValue?: number;
-  maximumValue?: number;
 }
 
-const MIN_VALUE = 5;
-const MAX_VALUE = 30;
+const DURATION_OPTIONS = [5, 10, 15, 20, 30, 60];
+
+function formatDuration(minutes: number): string {
+  return minutes >= 60 ? `${minutes / 60} hr` : `${minutes}`;
+}
 
 const DurationSlider: React.FC<DurationSliderProps> = React.memo(
-  ({
-    value,
-    onValueChange,
-    minimumValue = MIN_VALUE,
-    maximumValue = MAX_VALUE,
-  }) => {
+  ({ value, onValueChange }) => {
     const handlePress = useCallback(
       (newVal: number) => {
         onValueChange(newVal);
@@ -27,16 +23,15 @@ const DurationSlider: React.FC<DurationSliderProps> = React.memo(
       [onValueChange],
     );
 
+    const displayValue = value >= 60 ? `1 ${t('hour')}` : `${value} ${t('minutes')}`;
+
     return (
       <View style={styles.container}>
         <Text style={styles.label}>
-          {t('dndDuration')}: <Text style={styles.valueText}>{value} {t('minutes')}</Text>
+          {t('dndDuration')}: <Text style={styles.valueText}>{displayValue}</Text>
         </Text>
         <View style={styles.pillRow}>
-          {Array.from(
-            { length: (maximumValue - minimumValue) / 5 + 1 },
-            (_, i) => minimumValue + i * 5,
-          ).map((v) => (
+          {DURATION_OPTIONS.map((v) => (
             <TouchableOpacity
               key={v}
               style={[styles.pill, v === value && styles.pillActive]}
@@ -44,7 +39,7 @@ const DurationSlider: React.FC<DurationSliderProps> = React.memo(
               activeOpacity={0.7}
             >
               <Text style={[styles.pillText, v === value && styles.pillTextActive]}>
-                {v}
+                {formatDuration(v)}
               </Text>
             </TouchableOpacity>
           ))}

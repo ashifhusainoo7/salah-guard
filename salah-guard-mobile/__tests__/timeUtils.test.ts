@@ -70,10 +70,10 @@ describe('timeUtils', () => {
   });
 
   describe('formatIsoToTime', () => {
-    it('extracts time from ISO string', () => {
+    it('extracts time from ISO string in 12-hour format', () => {
       const result = formatIsoToTime('2024-01-15T13:45:00.000Z');
-      // Result depends on timezone, just check format
-      expect(result).toMatch(/^\d{2}:\d{2}$/);
+      // Returns 12-hour format like "1:45 PM" or "7:15 PM" (depends on timezone)
+      expect(result).toMatch(/^\d{1,2}:\d{2}\s(AM|PM)$/);
     });
   });
 

@@ -21,7 +21,7 @@ import {
   defaultSettings,
 } from '../utils/storage';
 import { scheduleAllAlarms } from '../services/alarmScheduler';
-import { getPendingNativeSessions, clearPendingNativeSessions } from '../services/dndBridge';
+import { getPendingNativeSessions, clearPendingNativeSessions, saveNotificationSettings } from '../services/dndBridge';
 
 interface SalahState {
   // Data
@@ -71,6 +71,7 @@ const useSalahStore = create<SalahState>((set, get) => ({
     const settings = getSettings();
     set({ prayers, settings });
     scheduleAllAlarms(prayers, settings.isGloballyActive);
+    saveNotificationSettings(settings.silentNotificationOnStart, settings.showLiftedNotification);
 
     // Sync DND sessions that completed while the app was closed
     try {
@@ -114,6 +115,7 @@ const useSalahStore = create<SalahState>((set, get) => ({
     const settings = updateLocalSettings(data);
     set({ settings });
     scheduleAllAlarms(get().prayers, settings.isGloballyActive);
+    saveNotificationSettings(settings.silentNotificationOnStart, settings.showLiftedNotification);
   },
 
   loadHistory: async (page?: number) => {

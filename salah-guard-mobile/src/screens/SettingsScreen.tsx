@@ -17,6 +17,7 @@ import {
   requestDndPermission,
   requestBatteryOptimizationExclusion,
   hasDndPermission,
+  isBatteryOptimizationExcluded,
 } from '../services/dndBridge';
 import {
   hasNotificationPermission,
@@ -32,6 +33,7 @@ const SettingsScreen: React.FC = () => {
   const settings = useSalahStore((s) => s.settings);
   const updateSettings = useSalahStore((s) => s.updateSettings);
   const [hasDnd, setHasDnd] = useState<boolean | null>(null);
+  const [hasBatteryExclusion, setHasBatteryExclusion] = useState<boolean | null>(null);
   const [showFocusGuide, setShowFocusGuide] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const appState = useRef(AppState.currentState);
@@ -52,6 +54,9 @@ const SettingsScreen: React.FC = () => {
       hasDndPermission()
         .then((result) => setHasDnd(result))
         .catch(() => setHasDnd(false));
+      isBatteryOptimizationExcluded()
+        .then((result) => setHasBatteryExclusion(result))
+        .catch(() => setHasBatteryExclusion(false));
     }
   }, [isIos]);
 
@@ -197,9 +202,15 @@ const SettingsScreen: React.FC = () => {
                   <Text style={styles.actionLabel}>
                     {t('excludeBatteryOptimization')}
                   </Text>
-                  <View style={[styles.statusPill, { backgroundColor: colors.bg.cardHover }]}>
-                    <Text style={[styles.statusLabel, { color: colors.text.muted }]}>
-                      Tap to configure
+                  <View style={[
+                    styles.statusPill,
+                    { backgroundColor: hasBatteryExclusion ? colors.status.successBg : colors.bg.cardHover },
+                  ]}>
+                    <Text style={[
+                      styles.statusLabel,
+                      { color: hasBatteryExclusion ? colors.status.success : colors.text.muted },
+                    ]}>
+                      {hasBatteryExclusion ? 'Granted' : 'Tap to configure'}
                     </Text>
                   </View>
                 </View>

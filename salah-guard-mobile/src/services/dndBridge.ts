@@ -16,6 +16,7 @@ interface DndModuleInterface {
   requestDndPermission: () => Promise<void>;
   isBatteryOptimizationExcluded: () => Promise<boolean>;
   requestBatteryOptimizationExclusion: () => Promise<void>;
+  saveNotificationSettings: (silentOnStart: boolean, showLifted: boolean) => Promise<boolean>;
   schedulePrayers: (prayersJson: string, isGloballyActive: boolean) => Promise<boolean>;
   cancelAllAlarms: () => Promise<boolean>;
   getPendingSessions: () => Promise<string>;
@@ -272,6 +273,24 @@ export async function clearPendingNativeSessions(): Promise<void> {
     await nativeDnd.clearPendingSessions();
   } catch (err) {
     logger.error('Failed to clear pending native sessions:', err);
+  }
+}
+
+/**
+ * Syncs notification toggle settings to native SharedPreferences
+ * so the DndAlarmReceiver can read them when deciding whether to show notifications.
+ */
+export async function saveNotificationSettings(
+  silentOnStart: boolean,
+  showLifted: boolean,
+): Promise<void> {
+  if (Platform.OS !== 'android' || !nativeDnd) {
+    return;
+  }
+  try {
+    await nativeDnd.saveNotificationSettings(silentOnStart, showLifted);
+  } catch (err) {
+    logger.error('Failed to save notification settings:', err);
   }
 }
 

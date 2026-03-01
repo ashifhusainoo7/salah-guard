@@ -101,11 +101,11 @@ describe('prayerUtils', () => {
   describe('getPrayerColor', () => {
     it('returns correct color for known prayers', () => {
       expect(getPrayerColor('Fajr')).toBe('#4A90D9');
-      expect(getPrayerColor('Maghrib')).toBe('#E74C3C');
+      expect(getPrayerColor('Maghrib')).toBe('#F43F5E');
     });
 
     it('returns default color for unknown prayer', () => {
-      expect(getPrayerColor('Unknown')).toBe('#1B5E20');
+      expect(getPrayerColor('Unknown')).toBe('#10B981');
     });
   });
 });

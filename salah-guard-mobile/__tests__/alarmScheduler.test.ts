@@ -1,4 +1,4 @@
-import PushNotification from 'react-native-push-notification';
+import { Platform, NativeModules } from 'react-native';
 import type { Prayer } from '../src/types';
 import {
   scheduleAllAlarms,
@@ -41,49 +41,71 @@ const createPrayers = (): Prayer[] => [
 describe('alarmScheduler', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    Platform.OS = 'android';
   });
 
   describe('initializeNotificationChannel', () => {
-    it('creates a notification channel', () => {
-      initializeNotificationChannel();
-      expect(PushNotification.createChannel).toHaveBeenCalledTimes(1);
+    it('runs without error', () => {
+      expect(() => initializeNotificationChannel()).not.toThrow();
     });
   });
 
   describe('cancelAllScheduledAlarms', () => {
-    it('cancels all local notifications', () => {
-      cancelAllScheduledAlarms();
-      expect(PushNotification.cancelAllLocalNotifications).toHaveBeenCalledTimes(1);
+    it('calls cancelAllAlarms on Android', async () => {
+      Platform.OS = 'android';
+      await cancelAllScheduledAlarms();
+      expect(NativeModules.DndModule.cancelAllAlarms).toHaveBeenCalled();
+    });
+
+    it('cancels iOS notifications on iOS', async () => {
+      Platform.OS = 'ios';
+      const Notifications = require('expo-notifications');
+      await cancelAllScheduledAlarms();
+      expect(Notifications.cancelAllScheduledNotificationsAsync).toHaveBeenCalled();
     });
   });
 
   describe('scheduleAllAlarms', () => {
-    it('schedules notifications for enabled prayers', () => {
+    it('schedules native alarms for enabled prayers on Android', async () => {
+      Platform.OS = 'android';
       const prayers = createPrayers();
-      scheduleAllAlarms(prayers, true);
+      await scheduleAllAlarms(prayers, true);
 
-      // Should cancel existing and schedule new ones
-      expect(PushNotification.cancelAllLocalNotifications).toHaveBeenCalled();
-      // 2 enabled prayers = 2 enable + 2 disable = 4 notifications
-      expect(PushNotification.localNotificationSchedule).toHaveBeenCalledTimes(4);
+      // Should call the native module to schedule prayers
+      expect(NativeModules.DndModule.schedulePrayers).toHaveBeenCalledWith(
+        expect.any(String),
+        true,
+      );
     });
 
-    it('does not schedule when globally inactive', () => {
+    it('does not schedule when globally inactive', async () => {
+      Platform.OS = 'android';
       const prayers = createPrayers();
-      scheduleAllAlarms(prayers, false);
+      await scheduleAllAlarms(prayers, false);
 
-      expect(PushNotification.cancelAllLocalNotifications).toHaveBeenCalled();
-      expect(PushNotification.localNotificationSchedule).not.toHaveBeenCalled();
+      expect(NativeModules.DndModule.schedulePrayers).not.toHaveBeenCalled();
     });
 
-    it('does not schedule for disabled prayers', () => {
+    it('does not schedule for disabled prayers', async () => {
+      Platform.OS = 'android';
       const prayers = createPrayers().map((p) => ({
         ...p,
         isEnabled: false,
       }));
-      scheduleAllAlarms(prayers, true);
+      await scheduleAllAlarms(prayers, true);
 
-      expect(PushNotification.localNotificationSchedule).not.toHaveBeenCalled();
+      expect(NativeModules.DndModule.schedulePrayers).not.toHaveBeenCalled();
+    });
+
+    it('uses iOS notifications path on iOS', async () => {
+      Platform.OS = 'ios';
+      const Notifications = require('expo-notifications');
+      const prayers = createPrayers();
+      await scheduleAllAlarms(prayers, true);
+
+      // Should schedule via expo-notifications, not native alarms
+      expect(NativeModules.DndModule.schedulePrayers).not.toHaveBeenCalled();
+      expect(Notifications.scheduleNotificationAsync).toHaveBeenCalled();
     });
   });
 });

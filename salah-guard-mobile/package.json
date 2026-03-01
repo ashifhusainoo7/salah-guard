@@ -62,7 +62,7 @@
     "eslint-plugin-react-native": "^4.1.0",
     "jest": "^29.7.0",
     "prettier": "^3.4.2",
-    "react-test-renderer": "18.3.1",
+    "react-test-renderer": "^19.1.0",
     "typescript": "^5.7.2"
   },
   "engines": {
@@ -70,11 +70,11 @@
   },
   "jest": {
     "preset": "react-native",
-    "setupFilesAfterSetup": [
+    "setupFilesAfterEnv": [
       "./jest.setup.ts"
     ],
     "transformIgnorePatterns": [
-      "node_modules/(?!(react-native|@react-native|@react-navigation|react-native-reanimated|react-native-vector-icons|react-native-screens|react-native-safe-area-context|nativewind|react-native-background-actions|@react-native-community|react-native-svg)/)"
+      "node_modules/(?!(react-native|@react-native|@react-navigation|react-native-reanimated|react-native-vector-icons|react-native-screens|react-native-safe-area-context|nativewind|react-native-background-actions|@react-native-community|react-native-svg|expo|@expo|expo-intent-launcher|expo-modules-core|expo-notifications|expo-constants)/)"
     ],
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/src/$1"

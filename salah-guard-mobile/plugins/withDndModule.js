@@ -129,6 +129,20 @@ class DndModule(reactContext: ReactApplicationContext) :
     }
 
     @ReactMethod
+    fun saveNotificationSettings(silentOnStart: Boolean, showLifted: Boolean, promise: Promise) {
+        try {
+            reactApplicationContext.getSharedPreferences("salah_guard_prefs", Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean("notify_on_start", silentOnStart)
+                .putBoolean("notify_on_lifted", showLifted)
+                .apply()
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("DND_ERROR", "Failed to save notification settings: \${e.message}", e)
+        }
+    }
+
+    @ReactMethod
     fun schedulePrayers(prayersJson: String, isGloballyActive: Boolean, promise: Promise) {
         try {
             DndAlarmScheduler.savePrayers(reactApplicationContext, prayersJson, isGloballyActive)
@@ -286,13 +300,19 @@ object DndAlarmScheduler {
             if (startMillis <= now && endMillis > now) {
                 val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                 if (nm.isNotificationPolicyAccessGranted) {
-                    nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_PRIORITY)
-                    Log.i(TAG, "Currently in prayer window for \$prayerName, DND enabled")
-                    prefs.edit()
-                        .putString("current_dnd_prayer", prayerName)
-                        .putLong("current_dnd_start", startMillis)
-                        .putInt("current_dnd_duration", duration)
-                        .apply()
+                    // If DND is currently off (INTERRUPTION_FILTER_ALL), the user manually
+                    // disabled it — respect that choice and don't re-enable.
+                    if (nm.currentInterruptionFilter == NotificationManager.INTERRUPTION_FILTER_ALL) {
+                        Log.i(TAG, "In prayer window for \$prayerName but user manually disabled DND, skipping")
+                    } else {
+                        nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_PRIORITY)
+                        Log.i(TAG, "Currently in prayer window for \$prayerName, DND enabled")
+                        prefs.edit()
+                            .putString("current_dnd_prayer", prayerName)
+                            .putLong("current_dnd_start", startMillis)
+                            .putInt("current_dnd_duration", duration)
+                            .apply()
+                    }
                 }
             }
             if (startMillis > now) {
@@ -467,13 +487,17 @@ class DndAlarmReceiver : BroadcastReceiver() {
         val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (!nm.isNotificationPolicyAccessGranted) return
         nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_PRIORITY)
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit()
             .putString("current_dnd_prayer", prayerName)
             .putLong("current_dnd_start", System.currentTimeMillis())
             .putInt("current_dnd_duration", duration)
             .apply()
-        showNotification(context, "DND Active - \$prayerName",
-            "Do Not Disturb enabled for \$duration minutes", 1)
+        val notifyOnStart = prefs.getBoolean("notify_on_start", true)
+        if (notifyOnStart) {
+            showNotification(context, "DND Active - \$prayerName",
+                "Do Not Disturb enabled for \$duration minutes", 1)
+        }
     }
 
     private fun handleDisableDnd(context: Context, prayerName: String, duration: Int) {
@@ -491,8 +515,11 @@ class DndAlarmReceiver : BroadcastReceiver() {
             prefs.edit().remove("current_dnd_prayer").remove("current_dnd_start")
                 .remove("current_dnd_duration").apply()
         }
-        showNotification(context, "DND Lifted - \$prayerName",
-            "Do Not Disturb has been disabled", 2)
+        val notifyOnLifted = prefs.getBoolean("notify_on_lifted", true)
+        if (notifyOnLifted) {
+            showNotification(context, "DND Lifted - \$prayerName",
+                "Do Not Disturb has been disabled", 2)
+        }
         DndAlarmScheduler.scheduleAll(context)
     }
 
